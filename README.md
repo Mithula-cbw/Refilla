@@ -220,12 +220,12 @@ Open the Settings panel (`Ctrl+,` or the gear icon) and use:
 
 ## 🗺️ Roadmap
 
-- [ ] Drag-and-drop reordering of accounts within a service
+- [x] Drag-and-drop reordering of accounts within a service
 - [ ] Custom notification sounds
 - [ ] Account usage history / log
 - [ ] CSV export for Vault entries
 - [ ] Auto-detect reset time from clipboard (paste a "quota exceeded" message)
-- [ ] GitHub Actions automated release pipeline
+- [x] GitHub Actions automated release pipeline
 
 ---
 
