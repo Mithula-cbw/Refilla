@@ -51,7 +51,7 @@ It's a **lightweight desktop app** that lives in your system tray and does two t
 
 | Quota Tracker | AI Vault |
 |:---:|:---:|
-| `[screenshot]` | `[screenshot]` |
+| `[screenshot-tracker.png]` | `[screenshot-vault.png]` |
 | Track cooldowns in real time | Save context per account |
 
 </div>
