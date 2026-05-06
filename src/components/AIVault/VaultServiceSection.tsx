@@ -81,13 +81,15 @@ export function VaultServiceSection({
           {service.icon}
         </div>
 
-        <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
+        <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
           {service.name}
         </span>
 
-        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, marginRight: '8px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '99px' }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '99px' }}>
           {totalEntries} {totalEntries === 1 ? 'entry' : 'entries'}
         </span>
+
+        <div style={{ flex: 1 }} />
 
         {/* Section controls (hover) */}
         <div

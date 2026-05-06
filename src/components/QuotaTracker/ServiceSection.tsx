@@ -109,24 +109,30 @@ export function ServiceSection({
         </div>
 
         {/* Name */}
-        <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
+        <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
           {service.name}
         </span>
 
-        {/* Count badges */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginRight: '8px' }}>
+        {/* Status badges */}
+        <div style={{ display: 'flex', gap: '6px' }}>
           {availableCount > 0 && (
-            <Badge variant="available">{availableCount} available</Badge>
+            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(63,185,80,0.15)', color: '#3fb950', border: '1px solid rgba(63,185,80,0.3)' }}>
+              {availableCount} available
+            </span>
           )}
           {cooldownCount > 0 && (
-            <Badge variant="cooldown">{cooldownCount} cooldown</Badge>
+            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(210,153,34,0.15)', color: '#d29922', border: '1px solid rgba(210,153,34,0.3)' }}>
+              {cooldownCount} cooldown
+            </span>
           )}
           {accounts.length === 0 && (
-            <Badge variant="count">0 accounts</Badge>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>0 accounts</span>
           )}
         </div>
 
-        {/* Actions (hover) */}
+        <div style={{ flex: 1 }} />
+
+        {/* Section controls (hover) */}
         <div
           style={{ display: 'flex', gap: '4px', opacity: hovering ? 1 : 0, transition: 'opacity 150ms' }}
           onClick={(e) => e.stopPropagation()}

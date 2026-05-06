@@ -151,12 +151,13 @@ export function AIVault({
               }}>
                 {newIcon.trim() || '🧠'}
               </div>
-              <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
+              <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
                 {newName.trim() || 'Service Name'}
               </span>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, marginRight: '8px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '99px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '99px' }}>
                 3 entries
               </span>
+              <div style={{ flex: 1 }} />
             </div>
           </div>
 
@@ -285,12 +286,13 @@ function EditVaultServiceForm({ service, allServices, onSave, onClose }: {
           }}>
             {icon.trim() || '🧠'}
           </div>
-          <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
+          <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
             {name.trim() || 'Service Name'}
           </span>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, marginRight: '8px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '99px' }}>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '99px' }}>
             3 entries
           </span>
+          <div style={{ flex: 1 }} />
         </div>
       </div>
 

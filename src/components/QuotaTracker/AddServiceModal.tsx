@@ -94,13 +94,14 @@ export function ServiceModal({ isOpen, onClose, onSave, existing, allServices }:
             }}>
               {icon.trim() || '🔧'}
             </div>
-            <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
+            <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
               {name.trim() || 'Service Name'}
             </span>
             <div style={{ display: 'flex', gap: '6px' }}>
               <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(63,185,80,0.15)', color: '#3fb950', border: '1px solid rgba(63,185,80,0.3)' }}>1 available</span>
               <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(210,153,34,0.15)', color: '#d29922', border: '1px solid rgba(210,153,34,0.3)' }}>1 cooldown</span>
             </div>
+            <div style={{ flex: 1 }} />
           </div>
         </div>
 
