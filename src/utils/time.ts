@@ -1,34 +1,83 @@
-import { formatDistanceToNow, differenceInSeconds, format } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
+
+// ─── Countdown Formatting ──────────────────────────────────────────────────────
+
+/**
+ * Structured breakdown returned for internal use.
+ */
+export interface CooldownParts {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  totalSeconds: number;
+}
+
+/**
+ * Compute remaining time parts from a cooldown ISO string.
+ */
+export function getCooldownParts(cooldownUntil: string | null): CooldownParts {
+  if (!cooldownUntil) return { days: 0, hours: 0, minutes: 0, seconds: 0, totalSeconds: 0 };
+  const totalSeconds = Math.max(0, Math.floor((new Date(cooldownUntil).getTime() - Date.now()) / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  return { days, hours, minutes, seconds, totalSeconds };
+}
 
 /**
  * Format remaining cooldown time for display.
- * Returns "Resetting soon…" if < 5 min, "Xh Ym" or "Xm" otherwise.
+ *
+ * Rules:
+ *  - totalSeconds <= 0      → 'Now'
+ *  - totalSeconds < 60      → 'Resets in Xs'          (live, tabular)
+ *  - totalSeconds < 300     → 'Resetting soon...'      (< 5 min threshold)
+ *  - hours < 1              → 'Xm'
+ *  - days >= 1              → 'Xd Yh' or 'Xd'
+ *  - otherwise              → 'Xh Ym' or 'Xh'
  */
 export function formatCooldown(cooldownUntil: string | null): string {
   if (!cooldownUntil) return '';
-  const targetMs = new Date(cooldownUntil).getTime();
-  const nowMs = Date.now();
-  const secondsLeft = Math.floor((targetMs - nowMs) / 1000);
+  const { days, hours, minutes, seconds, totalSeconds } = getCooldownParts(cooldownUntil);
 
-  if (secondsLeft <= 0) return 'Now';
-  if (secondsLeft < 300) return 'Resetting soon...';
+  if (totalSeconds <= 0) return 'Now';
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  if (totalSeconds < 300) return 'Resetting soon...';
 
-  const minutesLeft = Math.floor(secondsLeft / 60);
-  const hoursLeft = Math.floor(minutesLeft / 60);
-  const daysLeft = Math.floor(hoursLeft / 24);
-
-  if (daysLeft >= 1) {
-    const remainingHours = hoursLeft % 24;
-    return remainingHours > 0 ? `${daysLeft}d ${remainingHours}h` : `${daysLeft}d`;
+  if (days >= 1) {
+    return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
   }
-
-  if (hoursLeft > 0) {
-    const remainingMins = minutesLeft % 60;
-    return remainingMins > 0 ? `${hoursLeft}h ${remainingMins}m` : `${hoursLeft}h`;
+  if (hours > 0) {
+    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
   }
-
-  return `${minutesLeft}m`;
+  return `${minutes}m`;
 }
+
+/**
+ * How often the countdown should tick (ms), based on remaining time.
+ * Sub-5-min → every second; otherwise every 30s.
+ */
+export function getTickInterval(cooldownUntil: string | null): number {
+  if (!cooldownUntil) return 30_000;
+  const { totalSeconds } = getCooldownParts(cooldownUntil);
+  return totalSeconds < 300 ? 1_000 : 30_000;
+}
+
+/**
+ * Format a reset-interval (in hours) as a human-readable string.
+ * e.g. 24 → '1d', 48 → '2d', 25 → '1d 1h', 90 → '1d 18h', 6 → '6h'
+ */
+export function formatResetInterval(hours: number | null): string {
+  if (!hours) return '';
+  const d = Math.floor(hours / 24);
+  const h = hours % 24;
+  if (d >= 1 && h > 0) return `${d}d ${h}h reset interval`;
+  if (d >= 1) return `${d}d reset interval`;
+  return `${h}h reset interval`;
+}
+
+// ─── Status Helpers ────────────────────────────────────────────────────────────
 
 /**
  * Returns true if the cooldown has expired.
@@ -37,6 +86,8 @@ export function isCooldownExpired(cooldownUntil: string | null): boolean {
   if (!cooldownUntil) return false;
   return new Date(cooldownUntil).getTime() <= Date.now();
 }
+
+// ─── DateTime Helpers ──────────────────────────────────────────────────────────
 
 /**
  * Format a datetime string for local display.
@@ -57,7 +108,16 @@ export function timeAgo(iso: string): string {
  */
 export function addHours(date: Date, hours: number): string {
   const d = new Date(date);
-  d.setHours(d.getHours() + hours);
+  d.setTime(d.getTime() + hours * 3_600_000);
+  return d.toISOString();
+}
+
+/**
+ * Add days to a date, return ISO string.
+ */
+export function addDays(date: Date, days: number): string {
+  const d = new Date(date);
+  d.setTime(d.getTime() + days * 86_400_000);
   return d.toISOString();
 }
 

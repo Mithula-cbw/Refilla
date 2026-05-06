@@ -222,6 +222,22 @@ input, textarea, [data-selectable] {
   animation: statusPulse 2s ease-in-out infinite;
 }
 
+/* ─── Cooldown badge — "Resetting soon" glow pulse ─────────────────────────── */
+@keyframes badgeSoonGlow {
+  0%, 100% { box-shadow: 0 0 4px rgba(210,153,34,0.15); }
+  50%       { box-shadow: 0 0 10px rgba(210,153,34,0.35); }
+}
+
+.badge-cooldown-soon {
+  animation: badgeSoonGlow 1.6s ease-in-out infinite;
+}
+
+/* ─── Tabular numbers utility ───────────────────────────────────────────────── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
+}
+
 /* ─── Mark highlight ───────────────────────────────────────────────────────── */
 mark {
   background: rgba(56, 139, 253, 0.3);

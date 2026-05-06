@@ -7,6 +7,7 @@ import { ConfirmDialog, Modal } from '@/components/UI/Modal';
 import { Input, Select } from '@/components/UI/Input';
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { formatResetInterval } from '@/utils/time';
 
 interface ServiceSectionProps {
   service: Service;
@@ -108,25 +109,32 @@ export function ServiceSection({
           {service.icon}
         </div>
 
-        {/* Name */}
-        <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-          {service.name}
-        </span>
+        {/* Name + optional reset interval hint */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+          <span style={{ fontWeight: 600, fontSize: '15px', color: 'var(--text-primary)', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+            {service.name}
+          </span>
+          {service.resetIntervalHours && (
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.02em' }}>
+              {formatResetInterval(service.resetIntervalHours)}
+            </span>
+          )}
+        </div>
 
-        {/* Status badges */}
+        {/* Status count pills */}
         <div style={{ display: 'flex', gap: '6px' }}>
           {availableCount > 0 && (
-            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(63,185,80,0.15)', color: '#3fb950', border: '1px solid rgba(63,185,80,0.3)' }}>
+            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(63,185,80,0.15)', color: '#3fb950', border: '1px solid rgba(63,185,80,0.3)', fontWeight: 600 }}>
               {availableCount} available
             </span>
           )}
           {cooldownCount > 0 && (
-            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(210,153,34,0.15)', color: '#d29922', border: '1px solid rgba(210,153,34,0.3)' }}>
-              {cooldownCount} cooldown
+            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(210,153,34,0.15)', color: '#d29922', border: '1px solid rgba(210,153,34,0.3)', fontWeight: 600 }}>
+              {cooldownCount} cooling
             </span>
           )}
           {accounts.length === 0 && (
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>0 accounts</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', padding: '2px 6px' }}>0 accounts</span>
           )}
         </div>
 

@@ -148,8 +148,11 @@ function scheduleNotifications() {
           const notif = new Notification({
             title: 'Refilla: Account Ready',
             body: `${account.label} on ${serviceName} is now available`,
+            timeoutType: 'default',
           });
           notif.show();
+          // Auto-close after 5 s so it doesn't pile up in the Action Center
+          setTimeout(() => { try { notif.close(); } catch {} }, 5_000);
           notificationTimers.delete(account.id);
         }, delay);
 
@@ -191,7 +194,10 @@ function registerIPC() {
   // Notifications
   ipcMain.on('notification:show', (_event, { title, body }: { title: string; body: string }) => {
     if (Notification.isSupported()) {
-      new Notification({ title, body }).show();
+      const notif = new Notification({ title, body, timeoutType: 'default' });
+      notif.show();
+      // Auto-close after 5 s
+      setTimeout(() => { try { notif.close(); } catch {} }, 5_000);
     }
   });
 

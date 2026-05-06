@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Account, Service } from '@/types';
-import { StatusDot, Badge } from '@/components/UI/Badge';
+import { Badge, StatusDot, CooldownBadge } from '@/components/UI/Badge';
 import { IconButton } from '@/components/UI/Button';
 import { ConfirmDialog } from '@/components/UI/Modal';
 import { CooldownModal } from './CooldownModal';
 import { useCountdown } from '@/hooks/useCountdown';
-import {
-  Pencil, Clock, CheckCircle, Trash2,
-} from 'lucide-react';
+import { useToast } from '@/components/UI/ToastContext';
+import { Pencil, Clock, CheckCircle, Trash2 } from 'lucide-react';
 
 interface AccountCardProps {
   account: Account;
@@ -25,17 +24,26 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
   const [editLabel, setEditLabel] = useState(account.label);
   const [flash, setFlash] = useState(false);
 
-  const { label: countdownLabel, expired } = useCountdown(account.cooldownUntil);
+  const { addToast } = useToast();
+  const { label: countdownLabel, expired, isUrgent, secondsLeft } = useCountdown(account.cooldownUntil);
 
-  // When cooldown expires: auto-mark available + notify
+  // Auto-mark available + notify when cooldown expires (live edge only — never fires on mount)
   useEffect(() => {
     if (expired && account.status === 'cooldown') {
-      const updated: Account = { ...account, status: 'available', cooldownUntil: null, updatedAt: new Date().toISOString() };
+      const updated: Account = {
+        ...account,
+        status: 'available',
+        cooldownUntil: null,
+        updatedAt: new Date().toISOString(),
+      };
       onUpdate(updated);
-      onNotify('Refilla: Account Ready', `${account.label} on ${service.name} is now available`);
+      // In-app toast (auto-dismisses after 4 s via ToastContext)
+      addToast(`${account.label} on ${service.name} is now available`, 'success');
       setFlash(true);
       setTimeout(() => setFlash(false), 2100);
+      // OS notification is handled by main-process scheduler — no duplicate call here
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expired]);
 
   const markAvailable = () => {
@@ -57,9 +65,12 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
     if (account.status === 'available') return <Badge variant="available">Available</Badge>;
     if (account.status === 'cooldown') {
       return (
-        <Badge variant="cooldown" style={{ fontFamily: 'JetBrains Mono, monospace', fontVariantNumeric: 'tabular-nums' }}>
-          🕐 {countdownLabel ? `Resets in ${countdownLabel}` : 'On cooldown'}
-        </Badge>
+        <CooldownBadge
+          label={countdownLabel}
+          isUrgent={isUrgent}
+          secondsLeft={secondsLeft}
+          serviceColor={service.color}
+        />
       );
     }
     return <Badge variant="unknown">Unknown</Badge>;
@@ -77,9 +88,13 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
           gap: '12px',
           padding: '10px 14px',
           borderRadius: '8px',
-          border: '1px solid var(--border)',
-          background: 'var(--bg-tertiary)',
-          transition: 'all 150ms ease',
+          border: account.status === 'cooldown' && isUrgent
+            ? `1px solid ${service.color}55`
+            : '1px solid var(--border)',
+          background: account.status === 'cooldown' && isUrgent
+            ? `${service.color}08`
+            : 'var(--bg-tertiary)',
+          transition: 'all 200ms ease',
           boxShadow: hovering ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
           transform: hovering ? 'translateY(-1px)' : 'none',
         }}
@@ -115,13 +130,29 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
             />
           ) : (
             <span
-              style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              style={{
+                fontSize: '13px',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                display: 'block',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
             >
               {account.label}
             </span>
           )}
           {account.notes && !editing && (
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              display: 'block',
+              marginTop: '2px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}>
               {account.notes}
             </span>
           )}
@@ -132,13 +163,15 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
           {statusBadge()}
         </div>
 
-        {/* Action buttons */}
+        {/* Action buttons — visible on hover */}
         <div style={{
           display: 'flex',
           gap: '2px',
           opacity: hovering ? 1 : 0,
           transition: 'opacity 150ms',
           flexShrink: 0,
+          width: '114px',
+          justifyContent: 'flex-end',
         }}>
           <IconButton
             icon={<Pencil size={13} />}
@@ -151,6 +184,14 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
               label="Mark on cooldown"
               onClick={() => setShowCooldownModal(true)}
               style={{ color: 'var(--orange)' }}
+            />
+          )}
+          {account.status === 'cooldown' && (
+            <IconButton
+              icon={<Clock size={13} />}
+              label="Edit cooldown"
+              onClick={() => setShowCooldownModal(true)}
+              style={{ color: service.color }}
             />
           )}
           {account.status !== 'available' && (

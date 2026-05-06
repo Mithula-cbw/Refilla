@@ -4,6 +4,7 @@ import { Service } from '@/types';
 import { Modal } from '@/components/UI/Modal';
 import { Input } from '@/components/UI/Input';
 import { Button } from '@/components/UI/Button';
+import { formatResetInterval } from '@/utils/time';
 
 const PRESET_COLORS = ['#388bfd', '#3fb950', '#d29922', '#f85149', '#bc8cff', '#79c0ff'];
 const PRESET_EMOJIS = ['🤖', '🧠', '⚡', '✨', '💻', '🔧', '🚀', '💬'];
@@ -128,29 +129,54 @@ export function ServiceModal({ isOpen, onClose, onSave, existing, allServices }:
         {/* Reset interval */}
         <div>
           <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
-            Reset Interval (optional)
+            Reset Interval
+            <span style={{ fontWeight: 400, color: 'var(--text-muted)', marginLeft: '4px' }}>(optional)</span>
           </label>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <Input
-              id="svc-reset-days"
-              type="number"
-              placeholder="0"
-              value={resetDays}
-              onChange={(e) => setResetDays(e.target.value)}
-              style={{ width: '80px' }}
-            />
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Days</span>
-            
-            <Input
-              id="svc-reset-hours"
-              type="number"
-              placeholder="0"
-              value={resetHours}
-              onChange={(e) => setResetHours(e.target.value)}
-              style={{ width: '80px', marginLeft: '8px' }}
-            />
-            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Hours</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Input
+                id="svc-reset-days"
+                type="number"
+                min="0"
+                placeholder="0"
+                value={resetDays}
+                onChange={(e) => setResetDays(e.target.value)}
+                style={{ width: '72px', textAlign: 'center' }}
+              />
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', letterSpacing: '0.02em' }}>d</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Input
+                id="svc-reset-hours"
+                type="number"
+                min="0"
+                max="23"
+                placeholder="0"
+                value={resetHours}
+                onChange={(e) => setResetHours(e.target.value)}
+                style={{ width: '72px', textAlign: 'center' }}
+              />
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', letterSpacing: '0.02em' }}>h</span>
+            </div>
           </div>
+          {/* Live preview */}
+          {resetIntervalHours() !== null && (
+            <div style={{
+              marginTop: '8px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '99px',
+              background: 'rgba(56,139,253,0.1)',
+              border: '1px solid rgba(56,139,253,0.25)',
+            }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>⏱</span>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--blue)' }}>
+                {formatResetInterval(resetIntervalHours())}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Color */}
