@@ -16,7 +16,6 @@
 ![Electron](https://img.shields.io/badge/Electron-2B2E3A?style=for-the-badge&logo=electron&logoColor=9FEAF9)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux-blue?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
@@ -62,9 +61,9 @@ It's a **lightweight desktop app** that lives in your system tray and does two t
 ## 🚀 Features
 
 ### Quota Tracker
-- 🟢 **Live countdown** — see exactly how long until each account resets (updates every 30s)
+- 🟢 **Live countdown** — see exactly how long until each account resets
 - 🔔 **Desktop notifications** — get notified the moment a quota resets, even when minimized
-- ⚡ **Quick presets** — mark cooldown with +24h, +48h, or +1 week in one click
+- ⚡ **Quick presets** — mark cooldown with +24h, +48h, +3d, +7d, or +30d in one click
 - 📂 **Service sections** — group accounts by tool (Cursor, Windsurf, Copilot, etc.)
 - 🔍 **Filter & sort** — view only available, only cooling down, or sort by reset time
 - 🕐 **Smart auto-recover** — accounts that reset while the app was closed are auto-updated on launch
@@ -77,9 +76,9 @@ It's a **lightweight desktop app** that lives in your system tray and does two t
 - 📤 **Export / Import** — back up your vault as JSON anytime
 
 ### App-wide
-- 🌙 **Dark & light theme** — GitHub-dark-inspired default, clean light mode available
-- 🖥️ **System tray** — runs quietly in the background, shows a count of accounts resetting soon
-- ⌨️ **Keyboard shortcuts** — `Ctrl+1/2` to switch tabs, `Ctrl+F` to search, `Ctrl+N` to add
+- 🌙 **Dark & light theme** — on-brand dark default with green accent, clean light mode available
+- 🖥️ **System tray** — runs quietly in the background with app logo and instant access
+- ⌨️ **Keyboard shortcuts** — `Ctrl+1/2` to switch tabs, `Ctrl+,` for settings, `Escape` to close
 - 💾 **Fully local** — all data stored in a JSON file on your own machine
 - 🔒 **No telemetry, no analytics, no internet** — ever
 
@@ -89,14 +88,14 @@ It's a **lightweight desktop app** that lives in your system tray and does two t
 
 ### Download (recommended)
 
-Go to the [Releases](../../releases) page and download:
+Go to the [**Releases**](../../releases) page and download the latest version:
 
-| OS | File |
-|----|------|
-| Windows | `Refilla-Setup-x.x.x.exe` |
-| Linux | `Refilla-x.x.x.AppImage` |
+| OS | File | Notes |
+|----|------|-------|
+| Windows | `Refilla-Setup-x.x.x.exe` | Run installer, creates desktop shortcut |
+| Linux | `Refilla-x.x.x.AppImage` | No install needed, just run |
 
-**Windows:** Run the `.exe` installer. Refilla installs like any normal app with a desktop shortcut.
+**Windows:** Double-click the `.exe`. Windows SmartScreen may warn about an unsigned app — click **More info → Run anyway**.
 
 **Linux:**
 ```bash
@@ -141,7 +140,50 @@ npm run build:linux
 npm run build
 ```
 
-Output files will be in the `dist/` folder.
+Output files will be in the **`release/`** folder:
+
+| OS | Output file |
+|----|-------------|
+| Windows | `release/Refilla Setup x.x.x.exe` |
+| Linux | `release/Refilla-x.x.x.AppImage` |
+
+---
+
+## 🚢 Publishing a GitHub Release
+
+### Step 1 — Build locally
+
+```bash
+npm run build:win
+```
+
+The installer appears at `release/Refilla Setup 1.0.0.exe`.
+
+### Step 2 — Tag the version
+
+```bash
+git add .
+git commit -m "chore: release v1.0.0"
+git tag v1.0.0
+git push && git push --tags
+```
+
+### Step 3 — Create the GitHub Release
+
+1. Go to your repo on GitHub → **Releases** → **Draft a new release**
+2. Choose the tag you just pushed (e.g. `v1.0.0`)
+3. Add a title: `Refilla v1.0.0`
+4. Write release notes (what changed, what's new)
+5. Drag and drop the file from `release/` into the **Assets** area:
+   - `Refilla Setup 1.0.0.exe` (Windows)
+   - `Refilla-1.0.0.AppImage` (Linux, if built)
+6. Click **Publish release**
+
+> Users will then see a **Download** button directly on the Releases page.
+
+### Automated releases (GitHub Actions)
+
+If you add `.github/workflows/release.yml` to the repo, every time you push a `v*` tag, GitHub Actions will automatically build the Windows installer and attach it to a release — no manual upload needed.
 
 ---
 
@@ -158,11 +200,11 @@ Refilla stores all data in a single JSON file using `electron-store`. No databas
 
 ### Backup & Restore
 
-Open the Settings panel (gear icon in the titlebar) and use:
+Open the Settings panel (`Ctrl+,` or the gear icon) and use:
 
 - **Export all data** — saves a full JSON backup to any folder you choose
-- **Import data** — restore from a backup (merge or replace options available)
-- **Open data folder** — opens the folder in your file explorer
+- **Import data** — restore from a backup (merge or replace existing data)
+- **Open data folder** — opens the folder directly in your file explorer
 
 > ⚠️ **Important:** Refilla is **not** a password manager. The AI Vault is unencrypted plain text. Do not store real API keys, passwords, or sensitive secrets in it.
 
@@ -174,8 +216,7 @@ Open the Settings panel (gear icon in the titlebar) and use:
 |----------|--------|
 | `Ctrl + 1` | Switch to Quota Tracker |
 | `Ctrl + 2` | Switch to AI Vault |
-| `Ctrl + F` | Focus search / filter bar |
-| `Ctrl + N` | Add new account (focused section) |
+| `Ctrl + ,` | Open Settings |
 | `Escape` | Close modal or panel |
 
 ---
@@ -185,9 +226,9 @@ Open the Settings panel (gear icon in the titlebar) and use:
 - [ ] Drag-and-drop reordering of accounts within a service
 - [ ] Custom notification sounds
 - [ ] Account usage history / log
-- [ ] Color-coded service icons
 - [ ] CSV export for Vault entries
 - [ ] Auto-detect reset time from clipboard (paste a "quota exceeded" message)
+- [ ] GitHub Actions automated release pipeline
 
 ---
 
