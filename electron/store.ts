@@ -86,7 +86,7 @@ function getSeedData() {
 const seed = getSeedData();
 
 export const store = new Store<StoreSchema>({
-  name: 'aitrack-data',
+  name: 'refilla-data',
   defaults: {
     theme: 'dark',
     activeTab: 'quota',

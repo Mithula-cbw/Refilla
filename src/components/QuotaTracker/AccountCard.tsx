@@ -32,7 +32,7 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
     if (expired && account.status === 'cooldown') {
       const updated: Account = { ...account, status: 'available', cooldownUntil: null, updatedAt: new Date().toISOString() };
       onUpdate(updated);
-      onNotify('AITrack: Account Ready', `${account.label} on ${service.name} is now available`);
+      onNotify('Refilla: Account Ready', `${account.label} on ${service.name} is now available`);
       setFlash(true);
       setTimeout(() => setFlash(false), 2100);
     }

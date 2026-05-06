@@ -40,7 +40,7 @@ export function Titlebar({ theme, onToggleTheme, onOpenSettings, activeTab }: Ti
           color: 'var(--text-primary)',
           letterSpacing: '-0.01em',
         }}>
-          AITrack
+          Refilla
         </span>
         <span style={{
           width: '1px',

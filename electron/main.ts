@@ -89,11 +89,11 @@ function createTray() {
   }
 
   tray = new Tray(icon);
-  tray.setToolTip('AITrack');
+  tray.setToolTip('Refilla');
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Open AITrack',
+      label: 'Open Refilla',
       click: () => {
         mainWindow?.show();
         mainWindow?.focus();
@@ -146,7 +146,7 @@ function scheduleNotifications() {
         const timer = setTimeout(() => {
           if (!Notification.isSupported()) return;
           const notif = new Notification({
-            title: 'AITrack: Account Ready',
+            title: 'Refilla: Account Ready',
             body: `${account.label} on ${serviceName} is now available`,
           });
           notif.show();
@@ -204,8 +204,8 @@ function registerIPC() {
   // Export data
   ipcMain.handle('data:export', async (_event, jsonData: string) => {
     const result = await dialog.showSaveDialog(mainWindow!, {
-      title: 'Export AITrack Data',
-      defaultPath: `aitrack-backup-${new Date().toISOString().slice(0, 10)}.json`,
+      title: 'Export Refilla Data',
+      defaultPath: `refilla-backup-${new Date().toISOString().slice(0, 10)}.json`,
       filters: [{ name: 'JSON', extensions: ['json'] }],
     });
     if (result.canceled || !result.filePath) return false;
@@ -216,7 +216,7 @@ function registerIPC() {
   // Import data
   ipcMain.handle('data:import', async () => {
     const result = await dialog.showOpenDialog(mainWindow!, {
-      title: 'Import AITrack Data',
+      title: 'Import Refilla Data',
       filters: [{ name: 'JSON', extensions: ['json'] }],
       properties: ['openFile'],
     });

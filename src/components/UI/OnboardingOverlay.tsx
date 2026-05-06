@@ -5,13 +5,13 @@ import { Button } from '@/components/UI/Button';
 const STEPS = [
   {
     icon: '🤖',
-    title: 'Welcome to AITrack',
+    title: 'Welcome to Refilla',
     body: 'Manage all your AI service accounts in one place — quota tracking, cooldown timers, and conversation notes. Everything stays on your machine. No cloud, no sync.',
   },
   {
     icon: '⏱️',
     title: 'Quota Tracker',
-    body: 'Add AI services (Cursor, Windsurf, Copilot…) and the accounts you use for each. When a quota runs out, mark it "On Cooldown" and AITrack will notify you the moment it resets.',
+    body: 'Add AI services (Cursor, Windsurf, Copilot…) and the accounts you use for each. When a quota runs out, mark it "On Cooldown" and Refilla will notify you the moment it resets.',
   },
   {
     icon: '🧠',
@@ -45,7 +45,7 @@ export function OnboardingOverlay({ onDone }: OnboardingOverlayProps) {
         }}
         role="dialog"
         aria-modal="true"
-        aria-label="Welcome to AITrack"
+        aria-label="Welcome to Refilla"
       >
         {/* Icon */}
         <div style={{ fontSize: '52px', marginBottom: '16px', lineHeight: 1 }}>

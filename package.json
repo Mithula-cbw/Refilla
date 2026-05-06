@@ -1,19 +1,22 @@
 {
-  "name": "aitrack",
+  "name": "refilla",
   "version": "1.0.0",
   "description": "AI Account Tracker — local desktop app for managing AI service quotas and conversation context",
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "concurrently -k \"vite\" \"electron-wait-vite\"",
-    "dev:electron": "wait-on tcp:5173 && cross-env NODE_ENV=development electron .",
+    "dev": "concurrently -k \"vite\" \"tsc -p tsconfig.electron.json -w\" \"wait-on tcp:5173 && cross-env NODE_ENV=development electron .\"",
     "build": "tsc && vite build && tsc -p tsconfig.electron.json && electron-builder",
     "build:win": "tsc && vite build && tsc -p tsconfig.electron.json && electron-builder --win",
     "build:linux": "tsc && vite build && tsc -p tsconfig.electron.json && electron-builder --linux",
-    "preview": "vite preview",
-    "electron:dev": "concurrently -k -P \"vite\" \"cross-env NODE_ENV=development wait-on tcp:5173 && electron .\""
+    "preview": "vite preview"
   },
-  "keywords": ["electron", "react", "ai", "tracker"],
-  "author": "AITrack",
+  "keywords": [
+    "electron",
+    "react",
+    "ai",
+    "tracker"
+  ],
+  "author": "🔱 PEGASUS",
   "license": "MIT",
   "dependencies": {
     "date-fns": "^3.6.0",
@@ -40,6 +43,6 @@
     "vite": "^5.4.4",
     "vite-plugin-electron": "^0.28.8",
     "vite-plugin-electron-renderer": "^0.14.6",
-    "wait-on": "^8.0.1"
+    "wait-on": "^8.0.5"
   }
 }

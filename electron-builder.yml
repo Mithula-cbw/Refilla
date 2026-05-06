@@ -1,6 +1,6 @@
-appId: com.aitrack.app
-productName: AITrack
-copyright: Copyright © 2025 AITrack
+appId: com.refilla.app
+productName: Refilla
+copyright: Copyright © 2025 Refilla
 
 directories:
   output: release
@@ -31,9 +31,9 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: AITrack
+  shortcutName: Refilla
 
 appImage:
-  artifactName: AITrack-${version}.AppImage
+  artifactName: Refilla-${version}.AppImage
 
 publish: null

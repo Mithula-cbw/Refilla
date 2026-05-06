@@ -10,7 +10,7 @@ export function useNotifications(enabled: boolean) {
   }, [enabled]);
 
   const testNotification = useCallback(() => {
-    notify('AITrack: Test Notification', 'Notifications are working correctly!');
+    notify('Refilla: Test Notification', 'Notifications are working correctly!');
     addToast('Test notification sent!', 'success');
   }, [notify, addToast]);
 

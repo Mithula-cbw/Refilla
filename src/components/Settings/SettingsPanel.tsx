@@ -211,7 +211,7 @@ export function SettingsPanel({
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '20px' }}>🤖</span>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>AITrack</span>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Refilla</span>
               </div>
               <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Version {version}</p>
               <p style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
