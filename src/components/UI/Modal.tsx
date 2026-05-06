@@ -13,6 +13,11 @@ export function Modal({ isOpen, onClose, title, children, width = 480, 'aria-lab
   const panelRef = useRef<HTMLDivElement>(null);
   const firstFocusRef = useRef<HTMLElement | null>(null);
 
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   // Trap focus in modal
   useEffect(() => {
     if (!isOpen) return;
@@ -30,10 +35,11 @@ export function Modal({ isOpen, onClose, title, children, width = 480, 'aria-lab
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key === 'Escape') { onCloseRef.current(); return; }
       if (e.key !== 'Tab') return;
 
       const all = Array.from(focusables);
+      if (all.length === 0) return;
       const first = all[0];
       const last = all[all.length - 1];
 
@@ -49,7 +55,7 @@ export function Modal({ isOpen, onClose, title, children, width = 480, 'aria-lab
       document.removeEventListener('keydown', handleKeyDown);
       firstFocusRef.current?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

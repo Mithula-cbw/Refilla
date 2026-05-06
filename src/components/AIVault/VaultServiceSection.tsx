@@ -53,16 +53,18 @@ export function VaultServiceSection({
   };
 
   return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden', marginBottom: '12px' }}>
+    <div style={{ border: `1px solid ${service.color}33`, borderRadius: '10px', overflow: 'hidden', marginBottom: '12px' }}>
       {/* Header */}
       <div
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
         style={{
           display: 'flex', alignItems: 'center', gap: '10px',
-          padding: '12px 16px',
-          background: 'var(--bg-secondary)',
+          padding: '16px 20px',
+          background: hovering ? `${service.color}1a` : `${service.color}0d`,
+          borderBottom: expanded ? `1px solid ${service.color}22` : 'none',
           cursor: 'pointer',
+          transition: 'all 200ms ease',
           userSelect: 'none',
         }}
         onClick={() => setExpanded((p) => !p)}
@@ -79,11 +81,11 @@ export function VaultServiceSection({
           {service.icon}
         </div>
 
-        <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)', flex: 1 }}>
+        <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
           {service.name}
         </span>
 
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, marginRight: '8px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '99px' }}>
           {totalEntries} {totalEntries === 1 ? 'entry' : 'entries'}
         </span>
 

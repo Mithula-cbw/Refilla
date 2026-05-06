@@ -67,7 +67,7 @@ export function ServiceSection({
 
   return (
     <div style={{
-      border: '1px solid var(--border)',
+      border: `1px solid ${service.color}33`,
       borderRadius: '10px',
       overflow: 'hidden',
       marginBottom: '10px',
@@ -80,10 +80,11 @@ export function ServiceSection({
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
-          padding: '12px 16px',
-          background: 'var(--bg-secondary)',
+          padding: '16px 20px',
+          background: hovering ? `${service.color}1a` : `${service.color}0d`,
+          borderBottom: expanded ? `1px solid ${service.color}22` : 'none',
           cursor: 'pointer',
-          transition: 'background 150ms',
+          transition: 'all 200ms ease',
           userSelect: 'none',
         }}
         onClick={() => setExpanded((p) => !p)}
@@ -108,12 +109,12 @@ export function ServiceSection({
         </div>
 
         {/* Name */}
-        <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)', flex: 1 }}>
+        <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
           {service.name}
         </span>
 
         {/* Count badges */}
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginRight: '8px' }}>
           {availableCount > 0 && (
             <Badge variant="available">{availableCount} available</Badge>
           )}
