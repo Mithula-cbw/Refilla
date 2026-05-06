@@ -38,6 +38,10 @@ const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 const store_1 = require("./store");
 const isDev = process.env.NODE_ENV === 'development';
+// Fix notification sender name on Windows (prevents "electron.app.electron")
+if (process.platform === 'win32') {
+    electron_1.app.setAppUserModelId('Refilla');
+}
 let mainWindow = null;
 let tray = null;
 // Notification timers: accountId -> NodeJS.Timeout
@@ -45,6 +49,7 @@ const notificationTimers = new Map();
 // ─── Window creation ──────────────────────────────────────────────────────────
 function createWindow() {
     const savedBounds = store_1.store.get('windowBounds');
+    const logoPath = path.join(__dirname, '../build/logo.png');
     mainWindow = new electron_1.BrowserWindow({
         width: savedBounds?.width ?? 1100,
         height: savedBounds?.height ?? 700,
@@ -54,7 +59,8 @@ function createWindow() {
         minHeight: 600,
         frame: false,
         titleBarStyle: 'hidden',
-        backgroundColor: '#0d1117',
+        backgroundColor: '#1e2235',
+        icon: fs.existsSync(logoPath) ? logoPath : undefined,
         show: false,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -95,14 +101,15 @@ function createWindow() {
 }
 // ─── System Tray ──────────────────────────────────────────────────────────────
 function createTray() {
-    // Use a simple generated icon (16x16 white pixel fallback)
-    const iconPath = path.join(__dirname, '../assets/tray-icon.png');
+    // Use the app logo from build/ folder
+    const iconPath = path.join(__dirname, '../build/logo.png');
     let icon;
     if (fs.existsSync(iconPath)) {
         icon = electron_1.nativeImage.createFromPath(iconPath);
+        // Resize to standard tray size (16x16 on Windows, 22x22 on Linux)
+        icon = icon.resize({ width: 16, height: 16 });
     }
     else {
-        // 16x16 transparent PNG fallback
         icon = electron_1.nativeImage.createEmpty();
     }
     tray = new electron_1.Tray(icon);
@@ -159,6 +166,7 @@ function scheduleNotifications() {
                     const notif = new electron_1.Notification({
                         title: 'Refilla: Account Ready',
                         body: `${account.label} on ${serviceName} is now available`,
+                        icon: path.join(__dirname, '../build/logo.png'),
                         timeoutType: 'default',
                     });
                     notif.show();
@@ -204,7 +212,12 @@ function registerIPC() {
     // Notifications
     electron_1.ipcMain.on('notification:show', (_event, { title, body }) => {
         if (electron_1.Notification.isSupported()) {
-            const notif = new electron_1.Notification({ title, body, timeoutType: 'default' });
+            const notif = new electron_1.Notification({
+                title,
+                body,
+                icon: path.join(__dirname, '../build/logo.png'),
+                timeoutType: 'default',
+            });
             notif.show();
             // Auto-close after 5 s
             setTimeout(() => { try {

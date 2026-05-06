@@ -124,7 +124,7 @@ export function ServiceSection({
         {/* Status count pills */}
         <div style={{ display: 'flex', gap: '6px' }}>
           {availableCount > 0 && (
-            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(63,185,80,0.15)', color: '#3fb950', border: '1px solid rgba(63,185,80,0.3)', fontWeight: 600 }}>
+            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(76,175,110,0.15)', color: '#4caf6e', border: '1px solid rgba(76,175,110,0.3)', fontWeight: 600 }}>
               {availableCount} available
             </span>
           )}
@@ -210,8 +210,8 @@ export function ServiceSection({
                 transition: 'all 150ms',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--blue)';
-                e.currentTarget.style.color = 'var(--blue)';
+                e.currentTarget.style.borderColor = 'var(--green)';
+                e.currentTarget.style.color = 'var(--green)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.borderColor = 'var(--border)';

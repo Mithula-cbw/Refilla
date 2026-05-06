@@ -125,9 +125,9 @@ export function SettingsPanel({
                     style={{
                       padding: '5px 14px', borderRadius: '99px', fontSize: '12px', fontWeight: 500,
                       cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
-                      background: store.theme === t ? 'rgba(56,139,253,0.15)' : 'var(--bg-tertiary)',
-                      border: `1px solid ${store.theme === t ? 'var(--blue)' : 'var(--border)'}`,
-                      color: store.theme === t ? 'var(--blue)' : 'var(--text-secondary)',
+                      background: store.theme === t ? 'rgba(76,175,110,0.15)' : 'var(--bg-tertiary)',
+                      border: `1px solid ${store.theme === t ? 'var(--green)' : 'var(--border)'}`,
+                      color: store.theme === t ? 'var(--green)' : 'var(--text-secondary)',
                       transition: 'all 150ms',
                     }}
                   >

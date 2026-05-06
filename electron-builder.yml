@@ -9,6 +9,7 @@ directories:
 files:
   - dist/**/*
   - dist-electron/**/*
+  - build/**/*
   - package.json
 
 win:
@@ -16,14 +17,14 @@ win:
     - target: nsis
       arch:
         - x64
-  icon: assets/icon.ico
+  icon: build/logo.ico
 
 linux:
   target:
     - target: AppImage
       arch:
         - x64
-  icon: assets/icon.png
+  icon: build/logo.png
   category: Utility
 
 nsis:

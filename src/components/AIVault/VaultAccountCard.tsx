@@ -106,7 +106,7 @@ export function VaultAccountCard({
             padding: '10px',
             background: 'var(--bg-tertiary)',
             borderRadius: '7px',
-            border: '1px dashed var(--blue)',
+            border: '1px dashed var(--green)',
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
@@ -191,7 +191,7 @@ const ghostBtnStyle: React.CSSProperties = {
   cursor: 'pointer', fontSize: '12px', fontFamily: 'Inter, system-ui, sans-serif',
 };
 const saveBtnStyle: React.CSSProperties = {
-  background: 'rgba(56,139,253,0.15)', border: '1px solid #388bfd',
-  color: '#388bfd', borderRadius: '5px', cursor: 'pointer',
+  background: 'rgba(76,175,110,0.15)', border: '1px solid #4caf6e',
+  color: '#4caf6e', borderRadius: '5px', cursor: 'pointer',
   fontSize: '12px', fontFamily: 'Inter, system-ui, sans-serif', padding: '4px 12px', fontWeight: 600,
 };

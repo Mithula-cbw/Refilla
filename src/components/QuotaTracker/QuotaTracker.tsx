@@ -23,7 +23,7 @@ interface QuotaTrackerProps {
 
 const FILTER_OPTIONS: { value: FilterType; label: string; dot?: string }[] = [
   { value: 'all',       label: 'All' },
-  { value: 'available', label: 'Available', dot: '#3fb950' },
+  { value: 'available', label: 'Available', dot: '#4caf6e' },
   { value: 'cooldown',  label: 'Cooling',   dot: '#d29922' },
   { value: 'unknown',   label: 'Unknown',   dot: '#484f58' },
 ];
@@ -93,9 +93,9 @@ export function QuotaTracker({
                 <span style={{
                   fontSize: '10px', fontWeight: 600,
                   padding: '2px 7px', borderRadius: '99px',
-                  background: 'rgba(63,185,80,0.12)',
-                  border: '1px solid rgba(63,185,80,0.3)',
-                  color: '#3fb950',
+                  background: 'rgba(76,175,110,0.12)',
+                  border: '1px solid rgba(76,175,110,0.3)',
+                  color: '#4caf6e',
                 }}>
                   {availableCount} ready
                 </span>

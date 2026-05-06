@@ -31,7 +31,7 @@ export function Input({ label, error, helpText, id, ...rest }: InputProps) {
           ...rest.style,
         }}
         onFocus={(e) => {
-          e.currentTarget.style.borderColor = 'var(--blue)';
+          e.currentTarget.style.borderColor = 'var(--green)';
           rest.onFocus?.(e);
         }}
         onBlur={(e) => {
@@ -79,7 +79,7 @@ export function Textarea({ label, error, helpText, id, ...rest }: TextareaProps)
           ...rest.style,
         }}
         onFocus={(e) => {
-          e.currentTarget.style.borderColor = 'var(--blue)';
+          e.currentTarget.style.borderColor = 'var(--green)';
           rest.onFocus?.(e);
         }}
         onBlur={(e) => {

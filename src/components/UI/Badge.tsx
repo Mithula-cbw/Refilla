@@ -12,8 +12,8 @@ interface BadgeProps {
 
 const badgeStyles: Record<BadgeVariant, React.CSSProperties> = {
   available: {
-    background: 'rgba(63,185,80,0.15)',
-    border: '1px solid rgba(63,185,80,0.4)',
+    background: 'rgba(76,175,110,0.15)',
+    border: '1px solid rgba(76,175,110,0.4)',
     color: 'var(--green)',
   },
   cooldown: {
@@ -108,8 +108,8 @@ export function CooldownBadge({ label, isUrgent, secondsLeft, serviceColor }: Co
     return (
       <span style={{
         ...baseStyle,
-        background: 'rgba(63,185,80,0.15)',
-        border: '1px solid rgba(63,185,80,0.5)',
+        background: 'rgba(76,175,110,0.15)',
+        border: '1px solid rgba(76,175,110,0.5)',
         color: 'var(--green)',
       }}>
         ✓ Ready
@@ -171,7 +171,7 @@ interface StatusDotProps {
 
 export function StatusDot({ status, size = 8 }: StatusDotProps) {
   const colors: Record<AccountStatus, string> = {
-    available: '#3fb950',
+    available: '#4caf6e',
     cooldown: '#d29922',
     unknown: '#484f58',
   };
@@ -188,7 +188,7 @@ export function StatusDot({ status, size = 8 }: StatusDotProps) {
         background: colors[status],
         flexShrink: 0,
         boxShadow: status === 'available'
-          ? '0 0 6px rgba(63,185,80,0.5)'
+          ? '0 0 6px rgba(76,175,110,0.55)'
           : status === 'cooldown'
           ? '0 0 6px rgba(210,153,34,0.4)'
           : 'none',

@@ -102,7 +102,7 @@ export function EntryRow({ entry, allKeys, highlight: highlightQuery = '', isFla
                 aria-label="Entry key"
                 style={{
                   width: '100%', padding: '5px 8px', background: 'var(--bg-secondary)',
-                  border: '1px solid var(--blue)', borderRadius: '5px',
+                  border: '1px solid var(--green)', borderRadius: '5px',
                   color: 'var(--text-primary)', fontSize: '12px', fontWeight: 600, outline: 'none',
                   fontFamily: 'Inter, system-ui, sans-serif',
                 }}
@@ -141,7 +141,7 @@ export function EntryRow({ entry, allKeys, highlight: highlightQuery = '', isFla
               rows={3}
               style={{
                 width: '100%', padding: '6px 8px', background: 'var(--bg-secondary)',
-                border: '1px solid var(--blue)', borderRadius: '5px',
+                border: '1px solid var(--green)', borderRadius: '5px',
                 color: 'var(--text-primary)', fontSize: '12px', outline: 'none',
                 resize: 'vertical', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: 1.5,
               }}
@@ -239,8 +239,8 @@ const ghostBtnStyle: React.CSSProperties = {
   cursor: 'pointer', fontSize: '12px', fontFamily: 'Inter, system-ui, sans-serif', padding: '3px 6px',
 };
 const saveBtnStyle: React.CSSProperties = {
-  background: 'rgba(56,139,253,0.15)', border: '1px solid #388bfd',
-  color: '#388bfd', borderRadius: '5px', cursor: 'pointer',
+  background: 'rgba(76,175,110,0.15)', border: '1px solid #4caf6e',
+  color: '#4caf6e', borderRadius: '5px', cursor: 'pointer',
   fontSize: '12px', fontFamily: 'Inter, system-ui, sans-serif', padding: '4px 10px', fontWeight: 600,
 };
 const iconBtnStyle: React.CSSProperties = {
