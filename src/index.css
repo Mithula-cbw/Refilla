@@ -5,22 +5,22 @@
 
 /* ─── CSS Variables — Dark Theme (default) ─────────────────────────────────── */
 :root {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #21262d;
-  --border: #30363d;
+  --bg-primary: #1e2235;
+  --bg-secondary: #252840;
+  --bg-tertiary: #2d3150;
+  --border: #363b57;
   --text-primary: #e6edf3;
   --text-secondary: #8b949e;
-  --text-muted: #484f58;
-  --green: #3fb950;
-  --green-text: #2ea043;
+  --text-muted: #555d7a;
+  --green: #4caf6e;
+  --green-text: #3d9659;
   --orange: #d29922;
   --orange-text: #bb8009;
   --red: #f85149;
   --blue: #388bfd;
   --purple: #bc8cff;
-  --scrollbar-track: #161b22;
-  --scrollbar-thumb: #30363d;
+  --scrollbar-track: #252840;
+  --scrollbar-thumb: #363b57;
 }
 
 /* ─── Light Theme ──────────────────────────────────────────────────────────── */
@@ -87,7 +87,7 @@ input, textarea, [data-selectable] {
 
 /* ─── Focus ring ───────────────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--blue);
+  outline: 2px solid var(--green);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -129,9 +129,9 @@ input, textarea, [data-selectable] {
 
 /* ─── Flash animations ─────────────────────────────────────────────────────── */
 @keyframes flashGreenBorder {
-  0%   { box-shadow: 0 0 0 0 rgba(63,185,80,0.7); }
-  50%  { box-shadow: 0 0 0 4px rgba(63,185,80,0.3); }
-  100% { box-shadow: 0 0 0 0 rgba(63,185,80,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(76,175,110,0.7); }
+  50%  { box-shadow: 0 0 0 4px rgba(76,175,110,0.3); }
+  100% { box-shadow: 0 0 0 0 rgba(76,175,110,0); }
 }
 
 .flash-green-border {

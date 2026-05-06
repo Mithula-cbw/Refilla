@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Modal } from '@/components/UI/Modal';
 import { Input } from '@/components/UI/Input';
 
-const PRESET_COLORS = ['#388bfd', '#3fb950', '#d29922', '#f85149', '#bc8cff', '#79c0ff'];
+const PRESET_COLORS = ['#388bfd', '#4caf6e', '#d29922', '#f85149', '#bc8cff', '#79c0ff'];
 const PRESET_EMOJIS = ['🤖', '🧠', '⚡', '✨', '💻', '🔧', '🚀', '💬'];
 
 interface AIVaultProps {

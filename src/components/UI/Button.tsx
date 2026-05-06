@@ -13,9 +13,9 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
-    background: 'rgba(56,139,253,0.15)',
-    border: '1px solid #388bfd',
-    color: '#388bfd',
+    background: 'rgba(76,175,110,0.15)',
+    border: '1px solid #4caf6e',
+    color: '#4caf6e',
   },
   secondary: {
     background: 'var(--bg-tertiary)',
@@ -33,9 +33,9 @@ const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
     color: '#f85149',
   },
   success: {
-    background: 'rgba(63,185,80,0.1)',
-    border: '1px solid rgba(63,185,80,0.4)',
-    color: '#3fb950',
+    background: 'rgba(76,175,110,0.12)',
+    border: '1px solid rgba(76,175,110,0.45)',
+    color: '#4caf6e',
   },
 };
 

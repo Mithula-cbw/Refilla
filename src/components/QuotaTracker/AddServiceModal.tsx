@@ -6,7 +6,7 @@ import { Input } from '@/components/UI/Input';
 import { Button } from '@/components/UI/Button';
 import { formatResetInterval } from '@/utils/time';
 
-const PRESET_COLORS = ['#388bfd', '#3fb950', '#d29922', '#f85149', '#bc8cff', '#79c0ff'];
+const PRESET_COLORS = ['#388bfd', '#4caf6e', '#d29922', '#f85149', '#bc8cff', '#79c0ff'];
 const PRESET_EMOJIS = ['🤖', '🧠', '⚡', '✨', '💻', '🔧', '🚀', '💬'];
 
 interface ServiceModalProps {

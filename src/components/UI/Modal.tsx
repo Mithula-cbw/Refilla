@@ -151,10 +151,10 @@ export function ConfirmDialog({
           aria-label={confirmLabel}
           style={{
             padding: '8px 16px',
-            background: destructive ? 'rgba(248,81,73,0.15)' : 'rgba(56,139,253,0.15)',
-            border: `1px solid ${destructive ? '#f85149' : '#388bfd'}`,
+            background: destructive ? 'rgba(248,81,73,0.15)' : 'rgba(76,175,110,0.15)',
+            border: `1px solid ${destructive ? '#f85149' : '#4caf6e'}`,
             borderRadius: '6px',
-            color: destructive ? '#f85149' : '#388bfd',
+            color: destructive ? '#f85149' : '#4caf6e',
             cursor: 'pointer',
             fontSize: '13px',
             fontWeight: 600,

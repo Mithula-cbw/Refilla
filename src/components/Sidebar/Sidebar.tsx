@@ -44,8 +44,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               padding: '10px 12px',
               borderRadius: '8px',
               border: 'none',
-              background: isActive ? 'rgba(56,139,253,0.1)' : 'transparent',
-              color: isActive ? 'var(--blue)' : 'var(--text-secondary)',
+              background: isActive ? 'rgba(76,175,110,0.1)' : 'transparent',
+              color: isActive ? 'var(--green)' : 'var(--text-secondary)',
               cursor: 'pointer',
               fontSize: '13px',
               fontWeight: isActive ? 600 : 400,
@@ -53,7 +53,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               width: '100%',
               transition: 'all 150ms ease',
               position: 'relative',
-              borderLeft: `3px solid ${isActive ? 'var(--blue)' : 'transparent'}`,
+              borderLeft: `3px solid ${isActive ? 'var(--green)' : 'transparent'}`,
               fontFamily: 'Inter, system-ui, sans-serif',
             }}
             onMouseEnter={(e) => {

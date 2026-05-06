@@ -76,10 +76,10 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
 }
 
 const typeConfig: Record<ToastType, { bg: string; border: string; icon: string; iconColor: string }> = {
-  success: { bg: 'rgba(22,27,34,0.97)', border: '#3fb950', icon: '✓', iconColor: '#3fb950' },
-  warning: { bg: 'rgba(22,27,34,0.97)', border: '#d29922', icon: '⚠', iconColor: '#d29922' },
-  error:   { bg: 'rgba(22,27,34,0.97)', border: '#f85149', icon: '✕', iconColor: '#f85149' },
-  info:    { bg: 'rgba(22,27,34,0.97)', border: '#388bfd', icon: 'ℹ', iconColor: '#388bfd' },
+  success: { bg: 'var(--bg-secondary)', border: '#4caf6e', icon: '✓', iconColor: '#4caf6e' },
+  warning: { bg: 'var(--bg-secondary)', border: '#d29922', icon: '⚠', iconColor: '#d29922' },
+  error:   { bg: 'var(--bg-secondary)', border: '#f85149', icon: '✕', iconColor: '#f85149' },
+  info:    { bg: 'var(--bg-secondary)', border: '#388bfd', icon: 'ℹ', iconColor: '#388bfd' },
 };
 
 function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) {
@@ -100,8 +100,9 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
         gap: '10px',
         minWidth: '260px',
         maxWidth: '360px',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
         backdropFilter: 'blur(8px)',
+        outline: `1px solid var(--border)`,
       }}
     >
       <span style={{ color: cfg.iconColor, fontWeight: 700, fontSize: '14px', flexShrink: 0 }}>

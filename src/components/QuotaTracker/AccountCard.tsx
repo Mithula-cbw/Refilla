@@ -117,7 +117,7 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
               aria-label="Edit account label"
               style={{
                 background: 'var(--bg-secondary)',
-                border: '1px solid var(--blue)',
+                border: '1px solid var(--green)',
                 borderRadius: '4px',
                 color: 'var(--text-primary)',
                 fontSize: '13px',
