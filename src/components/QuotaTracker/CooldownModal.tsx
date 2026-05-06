@@ -16,7 +16,9 @@ interface CooldownModalProps {
 const PRESETS = [
   { label: '+24h', hours: 24 },
   { label: '+48h', hours: 48 },
-  { label: '+1 week', hours: 168 },
+  { label: '+3 days', hours: 72 },
+  { label: '+7 days', hours: 168 },
+  { label: '+30 days', hours: 720 },
 ];
 
 export function CooldownModal({ isOpen, onClose, onSave, account, service }: CooldownModalProps) {

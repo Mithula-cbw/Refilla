@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Service } from '@/types';
 import { Modal } from '@/components/UI/Modal';
-import { Input, Select } from '@/components/UI/Input';
+import { Input } from '@/components/UI/Input';
 import { Button } from '@/components/UI/Button';
 
 const PRESET_COLORS = ['#388bfd', '#3fb950', '#d29922', '#f85149', '#bc8cff', '#79c0ff'];
@@ -19,24 +19,27 @@ interface ServiceModalProps {
 export function ServiceModal({ isOpen, onClose, onSave, existing, allServices }: ServiceModalProps) {
   const [name, setName] = useState(existing?.name ?? '');
   const [icon, setIcon] = useState(existing?.icon ?? '');
-  const [resetValue, setResetValue] = useState(() => {
+  const [resetDays, setResetDays] = useState(() => {
     const h = existing?.resetIntervalHours;
     if (!h) return '';
-    return h >= 168 ? String(h / 168) : h >= 24 ? String(h / 24) : String(h);
+    const d = Math.floor(h / 24);
+    return d > 0 ? String(d) : '';
   });
-  const [resetUnit, setResetUnit] = useState<'hours' | 'days' | 'weeks'>(() => {
+  const [resetHours, setResetHours] = useState(() => {
     const h = existing?.resetIntervalHours;
-    if (!h) return 'hours';
-    return h >= 168 ? 'weeks' : h >= 24 ? 'days' : 'hours';
+    if (!h) return '';
+    const rem = h % 24;
+    return rem > 0 ? String(rem) : '';
   });
   const [color, setColor] = useState(existing?.color ?? PRESET_COLORS[0]);
   const [customColor, setCustomColor] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const resetIntervalHours = (): number | null => {
-    const v = parseFloat(resetValue);
-    if (!resetValue || isNaN(v)) return null;
-    return resetUnit === 'weeks' ? v * 168 : resetUnit === 'days' ? v * 24 : v;
+    const d = parseFloat(resetDays) || 0;
+    const h = parseFloat(resetHours) || 0;
+    if (!resetDays && !resetHours) return null;
+    return d * 24 + h;
   };
 
   const validate = () => {
@@ -76,34 +79,7 @@ export function ServiceModal({ isOpen, onClose, onSave, existing, allServices }:
       width={480}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {/* Live Preview */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Live Preview</span>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '16px 20px',
-            background: `${customColor || color}0d`,
-            border: `1px solid ${customColor || color}33`,
-            borderRadius: '10px',
-          }}>
-            <div style={{
-              width: '32px', height: '32px', borderRadius: '8px',
-              background: `${customColor || color}22`, border: `1px solid ${customColor || color}55`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '16px', flexShrink: 0,
-            }}>
-              {icon.trim() || '🔧'}
-            </div>
-            <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-              {name.trim() || 'Service Name'}
-            </span>
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(63,185,80,0.15)', color: '#3fb950', border: '1px solid rgba(63,185,80,0.3)' }}>1 available</span>
-              <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(210,153,34,0.15)', color: '#d29922', border: '1px solid rgba(210,153,34,0.3)' }}>1 cooldown</span>
-            </div>
-            <div style={{ flex: 1 }} />
-          </div>
-        </div>
+
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-secondary)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border)' }}>
         <Input
@@ -156,23 +132,24 @@ export function ServiceModal({ isOpen, onClose, onSave, existing, allServices }:
           </label>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <Input
-              id="svc-reset-value"
+              id="svc-reset-days"
               type="number"
-              placeholder="24"
-              value={resetValue}
-              onChange={(e) => setResetValue(e.target.value)}
+              placeholder="0"
+              value={resetDays}
+              onChange={(e) => setResetDays(e.target.value)}
               style={{ width: '80px' }}
             />
-            <Select
-              id="svc-reset-unit"
-              value={resetUnit}
-              onChange={(e) => setResetUnit(e.target.value as 'hours' | 'days' | 'weeks')}
-              style={{ width: '100px' }}
-            >
-              <option value="hours">Hours</option>
-              <option value="days">Days</option>
-              <option value="weeks">Weeks</option>
-            </Select>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Days</span>
+            
+            <Input
+              id="svc-reset-hours"
+              type="number"
+              placeholder="0"
+              value={resetHours}
+              onChange={(e) => setResetHours(e.target.value)}
+              style={{ width: '80px', marginLeft: '8px' }}
+            />
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Hours</span>
           </div>
         </div>
 

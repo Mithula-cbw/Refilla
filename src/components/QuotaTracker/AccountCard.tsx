@@ -57,7 +57,7 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
     if (account.status === 'available') return <Badge variant="available">Available</Badge>;
     if (account.status === 'cooldown') {
       return (
-        <Badge variant="cooldown">
+        <Badge variant="cooldown" style={{ fontFamily: 'JetBrains Mono, monospace', fontVariantNumeric: 'tabular-nums' }}>
           🕐 {countdownLabel ? `Resets in ${countdownLabel}` : 'On cooldown'}
         </Badge>
       );

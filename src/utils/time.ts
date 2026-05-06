@@ -11,15 +11,22 @@ export function formatCooldown(cooldownUntil: string | null): string {
   const secondsLeft = Math.floor((targetMs - nowMs) / 1000);
 
   if (secondsLeft <= 0) return 'Now';
-  if (secondsLeft < 300) return 'Resetting soon…';
+  if (secondsLeft < 300) return 'Resetting soon...';
 
   const minutesLeft = Math.floor(secondsLeft / 60);
   const hoursLeft = Math.floor(minutesLeft / 60);
-  const mins = minutesLeft % 60;
+  const daysLeft = Math.floor(hoursLeft / 24);
+
+  if (daysLeft >= 1) {
+    const remainingHours = hoursLeft % 24;
+    return remainingHours > 0 ? `${daysLeft}d ${remainingHours}h` : `${daysLeft}d`;
+  }
 
   if (hoursLeft > 0) {
-    return mins > 0 ? `${hoursLeft}h ${mins}m` : `${hoursLeft}h`;
+    const remainingMins = minutesLeft % 60;
+    return remainingMins > 0 ? `${hoursLeft}h ${remainingMins}m` : `${hoursLeft}h`;
   }
+
   return `${minutesLeft}m`;
 }
 
