@@ -73,9 +73,38 @@ export function ServiceModal({ isOpen, onClose, onSave, existing, allServices }:
       isOpen={isOpen}
       onClose={onClose}
       title={existing ? 'Edit Service' : 'Add Service'}
-      width={440}
+      width={480}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* Live Preview */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Live Preview</span>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '10px',
+            padding: '16px 20px',
+            background: `${customColor || color}0d`,
+            border: `1px solid ${customColor || color}33`,
+            borderRadius: '10px',
+          }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '8px',
+              background: `${customColor || color}22`, border: `1px solid ${customColor || color}55`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '16px', flexShrink: 0,
+            }}>
+              {icon.trim() || '🔧'}
+            </div>
+            <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
+              {name.trim() || 'Service Name'}
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(63,185,80,0.15)', color: '#3fb950', border: '1px solid rgba(63,185,80,0.3)' }}>1 available</span>
+              <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '99px', background: 'rgba(210,153,34,0.15)', color: '#d29922', border: '1px solid rgba(210,153,34,0.3)' }}>1 cooldown</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-secondary)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border)' }}>
         <Input
           id="svc-name"
           label="Service Name *"
@@ -185,6 +214,7 @@ export function ServiceModal({ isOpen, onClose, onSave, existing, allServices }:
               }}
             />
           </div>
+        </div>
         </div>
 
         {/* Actions */}

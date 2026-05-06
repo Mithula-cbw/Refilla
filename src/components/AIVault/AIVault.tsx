@@ -131,8 +131,36 @@ export function AIVault({
       </div>
 
       {/* Add service modal */}
-      <Modal isOpen={showAddService} onClose={() => setShowAddService(false)} title="Add Vault Service" width={440}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <Modal isOpen={showAddService} onClose={() => setShowAddService(false)} title="Add Vault Service" width={480}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Live Preview */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Live Preview</span>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '16px 20px',
+              background: `${newColor}0d`,
+              border: `1px solid ${newColor}33`,
+              borderRadius: '10px',
+            }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '8px',
+                background: `${newColor}22`, border: `1px solid ${newColor}55`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '16px', flexShrink: 0,
+              }}>
+                {newIcon.trim() || '🧠'}
+              </div>
+              <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
+                {newName.trim() || 'Service Name'}
+              </span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, marginRight: '8px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '99px' }}>
+                3 entries
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-secondary)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border)' }}>
           <Input
             id="vs-name"
             label="Service Name *"
@@ -195,6 +223,7 @@ export function AIVault({
               />
             </div>
           </div>
+          </div>
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
             <Button variant="secondary" onClick={() => setShowAddService(false)}>Cancel</Button>
             <Button variant="primary" onClick={handleAddService}>Add Service</Button>
@@ -237,8 +266,36 @@ function EditVaultServiceForm({ service, allServices, onSave, onClose }: {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      <Input id="vs-edit-name" label="Service Name *" value={name} onChange={(e) => { setName(e.target.value); setNameError(''); }} error={nameError} autoFocus />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {/* Live Preview */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Live Preview</span>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '16px 20px',
+          background: `${color}0d`,
+          border: `1px solid ${color}33`,
+          borderRadius: '10px',
+        }}>
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '8px',
+            background: `${color}22`, border: `1px solid ${color}55`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '16px', flexShrink: 0,
+          }}>
+            {icon.trim() || '🧠'}
+          </div>
+          <span style={{ fontWeight: 600, fontSize: '16px', color: 'var(--text-primary)', flex: 1, letterSpacing: '-0.01em' }}>
+            {name.trim() || 'Service Name'}
+          </span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500, marginRight: '8px', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: '99px' }}>
+            3 entries
+          </span>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--bg-secondary)', padding: '16px', borderRadius: '10px', border: '1px solid var(--border)' }}>
+        <Input id="vs-edit-name" label="Service Name *" value={name} onChange={(e) => { setName(e.target.value); setNameError(''); }} error={nameError} autoFocus />
       {/* Icon */}
       <div>
         <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', display: 'block', marginBottom: '8px' }}>
@@ -281,6 +338,7 @@ function EditVaultServiceForm({ service, allServices, onSave, onClose }: {
             />
           ))}
         </div>
+      </div>
       </div>
       <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
         <Button variant="secondary" onClick={onClose}>Cancel</Button>
