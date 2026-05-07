@@ -2,6 +2,8 @@ appId: com.refilla.app
 productName: Refilla
 copyright: Copyright © 2025 Refilla
 
+asar: true
+
 directories:
   output: release
   buildResources: assets
@@ -9,8 +11,16 @@ directories:
 files:
   - dist/**/*
   - dist-electron/**/*
-  - build/**/*
-  - package.json
+  - build/icon.ico
+  - build/icon.png
+  - "!**/node_modules/*/{README.md,readme.md}"
+  - "!**/node_modules/*/{test,tests,__tests__}/**"
+  - "!**/node_modules/**/*.map"
+  - "!**/node_modules/**/*.ts"
+  - "!**/*.{iml,hprof,orig,pyc,pyo,rbc,swp}"
+  - "!**/._*"
+  - "!**/{.DS_Store,.git,.svn}"
+  - "!**/node_modules/.cache/**"
 
 win:
   target:

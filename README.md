@@ -220,7 +220,7 @@ Open the Settings panel (`Ctrl+,` or the gear icon) and use:
 
 ## 🗺️ Roadmap
 
-- [x] Drag-and-drop reordering of accounts within a service
+- [ ] Drag-and-drop reordering of accounts within a service
 - [ ] Custom notification sounds
 - [ ] Account usage history / log
 - [ ] CSV export for Vault entries

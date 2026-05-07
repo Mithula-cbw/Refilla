@@ -136,7 +136,7 @@ export function CooldownBadge({ label, isUrgent, secondsLeft, serviceColor }: Co
     );
   }
 
-  // Normal cooldown display with live countdown
+  // Normal cooldown countdown pill
   const urgentGlow = isUrgent && serviceColor
     ? { boxShadow: `0 0 6px ${serviceColor}28` }
     : {};

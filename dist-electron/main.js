@@ -42,10 +42,60 @@ const isDev = process.env.NODE_ENV === 'development';
 if (process.platform === 'win32') {
     electron_1.app.setAppUserModelId('Refilla');
 }
+// ─── Background performance switches ──────────────────────────────────────────
+// Allow renderer to keep running at normal speed; only throttle when hidden
+electron_1.app.commandLine.appendSwitch('disable-renderer-backgrounding', 'false');
+electron_1.app.commandLine.appendSwitch('renderer-process-limit', '2');
 let mainWindow = null;
 let tray = null;
-// Notification timers: accountId -> NodeJS.Timeout
+// ─── Smart notification scheduler ────────────────────────────────────────────
+// Single chained setTimeout (zero CPU between resets).
+// accountId → active timer handle
 const notificationTimers = new Map();
+/**
+ * Cancel all existing notification timers, then scan accounts once and set
+ * exactly ONE setTimeout per account that has an upcoming reset.
+ * On fire: send notification, then re-schedule for the next reset.
+ */
+function scheduleNotifications() {
+    const accounts = store_1.store.get('accounts');
+    const services = store_1.store.get('services');
+    const notificationsEnabled = store_1.store.get('notificationsEnabled');
+    // Cancel any running timers first
+    notificationTimers.forEach((t) => clearTimeout(t));
+    notificationTimers.clear();
+    if (!notificationsEnabled)
+        return;
+    for (const account of accounts) {
+        if (account.status === 'cooldown' && account.cooldownUntil) {
+            const resetTime = new Date(account.cooldownUntil).getTime();
+            const delay = resetTime - Date.now();
+            if (delay > 0) {
+                const service = services.find((s) => s.id === account.serviceId);
+                const serviceName = service?.name ?? 'Unknown Service';
+                const fire = () => {
+                    if (!electron_1.Notification.isSupported())
+                        return;
+                    const notif = new electron_1.Notification({
+                        title: 'Refilla: Account Ready',
+                        body: `${account.label} on ${serviceName} is now available`,
+                        icon: path.join(__dirname, '../build/logo.png'),
+                        timeoutType: 'default',
+                    });
+                    notif.show();
+                    // Auto-close after 5 s
+                    setTimeout(() => { try {
+                        notif.close();
+                    }
+                    catch { /* noop */ } }, 5000);
+                    notificationTimers.delete(account.id);
+                };
+                const timer = setTimeout(fire, delay);
+                notificationTimers.set(account.id, timer);
+            }
+        }
+    }
+}
 // ─── Window creation ──────────────────────────────────────────────────────────
 function createWindow() {
     const savedBounds = store_1.store.get('windowBounds');
@@ -80,6 +130,8 @@ function createWindow() {
     // Show once ready
     mainWindow.once('ready-to-show', () => {
         mainWindow?.show();
+        // Initially visible — no throttling
+        mainWindow?.webContents.setBackgroundThrottling(false);
     });
     // Save window bounds on resize/move
     const saveBounds = () => {
@@ -90,10 +142,15 @@ function createWindow() {
     };
     mainWindow.on('resize', saveBounds);
     mainWindow.on('move', saveBounds);
-    // Minimize to tray on close
+    // Throttle CPU when window is hidden (minimize to tray on close)
     mainWindow.on('close', (e) => {
         e.preventDefault();
+        mainWindow?.webContents.setBackgroundThrottling(true);
         mainWindow?.hide();
+    });
+    // Un-throttle when window comes back
+    mainWindow.on('show', () => {
+        mainWindow?.webContents.setBackgroundThrottling(false);
     });
     mainWindow.on('closed', () => {
         mainWindow = null;
@@ -101,12 +158,10 @@ function createWindow() {
 }
 // ─── System Tray ──────────────────────────────────────────────────────────────
 function createTray() {
-    // Use the app logo from build/ folder
     const iconPath = path.join(__dirname, '../build/logo.png');
     let icon;
     if (fs.existsSync(iconPath)) {
         icon = electron_1.nativeImage.createFromPath(iconPath);
-        // Resize to standard tray size (16x16 on Windows, 22x22 on Linux)
         icon = icon.resize({ width: 16, height: 16 });
     }
     else {
@@ -133,62 +188,23 @@ function createTray() {
     tray.setContextMenu(contextMenu);
     tray.on('click', () => {
         if (mainWindow?.isVisible()) {
+            mainWindow.webContents.setBackgroundThrottling(true);
             mainWindow.hide();
         }
         else {
+            mainWindow?.webContents.setBackgroundThrottling(false);
             mainWindow?.show();
             mainWindow?.focus();
         }
     });
 }
-// ─── Schedule notifications for pending cooldowns ─────────────────────────────
-function scheduleNotifications() {
-    const accounts = store_1.store.get('accounts');
-    const services = store_1.store.get('services');
-    const notificationsEnabled = store_1.store.get('notificationsEnabled');
-    if (!notificationsEnabled)
-        return;
-    for (const account of accounts) {
-        if (account.status === 'cooldown' && account.cooldownUntil) {
-            const resetTime = new Date(account.cooldownUntil).getTime();
-            const now = Date.now();
-            const delay = resetTime - now;
-            if (delay > 0) {
-                const service = services.find((s) => s.id === account.serviceId);
-                const serviceName = service?.name ?? 'Unknown Service';
-                // Cancel any existing timer
-                if (notificationTimers.has(account.id)) {
-                    clearTimeout(notificationTimers.get(account.id));
-                }
-                const timer = setTimeout(() => {
-                    if (!electron_1.Notification.isSupported())
-                        return;
-                    const notif = new electron_1.Notification({
-                        title: 'Refilla: Account Ready',
-                        body: `${account.label} on ${serviceName} is now available`,
-                        icon: path.join(__dirname, '../build/logo.png'),
-                        timeoutType: 'default',
-                    });
-                    notif.show();
-                    // Auto-close after 5 s so it doesn't pile up in the Action Center
-                    setTimeout(() => { try {
-                        notif.close();
-                    }
-                    catch { } }, 5000);
-                    notificationTimers.delete(account.id);
-                }, delay);
-                notificationTimers.set(account.id, timer);
-            }
-        }
-    }
-}
 // ─── IPC Handlers ─────────────────────────────────────────────────────────────
 function registerIPC() {
-    // Store: get all
+    // Store: get all (called once on React startup)
     electron_1.ipcMain.handle('store:get', () => {
         return store_1.store.store;
     });
-    // Store: set partial
+    // Store: set partial (only on user-initiated changes)
     electron_1.ipcMain.handle('store:set', (_event, data) => {
         for (const [key, value] of Object.entries(data)) {
             store_1.store.set(key, value);
@@ -208,7 +224,10 @@ function registerIPC() {
             mainWindow?.maximize();
         }
     });
-    electron_1.ipcMain.on('window:close', () => mainWindow?.hide());
+    electron_1.ipcMain.on('window:close', () => {
+        mainWindow?.webContents.setBackgroundThrottling(true);
+        mainWindow?.hide();
+    });
     // Notifications
     electron_1.ipcMain.on('notification:show', (_event, { title, body }) => {
         if (electron_1.Notification.isSupported()) {
@@ -219,11 +238,10 @@ function registerIPC() {
                 timeoutType: 'default',
             });
             notif.show();
-            // Auto-close after 5 s
             setTimeout(() => { try {
                 notif.close();
             }
-            catch { } }, 5000);
+            catch { /* noop */ } }, 5000);
         }
     });
     // Shell: open data folder
@@ -264,6 +282,7 @@ electron_1.app.whenReady().then(() => {
     registerIPC();
     scheduleNotifications();
     electron_1.app.on('activate', () => {
+        // Window is never destroyed; just show if somehow missing
         if (electron_1.BrowserWindow.getAllWindows().length === 0)
             createWindow();
     });

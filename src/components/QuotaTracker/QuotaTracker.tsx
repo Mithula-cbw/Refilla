@@ -51,7 +51,16 @@ export function QuotaTracker({
       if (sort === 'name') return a.label.localeCompare(b.label);
       if (sort === 'status') {
         const order: Record<string, number> = { available: 0, cooldown: 1, unknown: 2 };
-        return (order[a.status] ?? 9) - (order[b.status] ?? 9);
+        const statusDiff = (order[a.status] ?? 9) - (order[b.status] ?? 9);
+        if (statusDiff !== 0) return statusDiff;
+        
+        if (a.status === 'cooldown' && b.status === 'cooldown') {
+          if (!a.cooldownUntil && !b.cooldownUntil) return 0;
+          if (!a.cooldownUntil) return 1;
+          if (!b.cooldownUntil) return -1;
+          return new Date(a.cooldownUntil).getTime() - new Date(b.cooldownUntil).getTime();
+        }
+        return 0;
       }
       if (sort === 'resetTime') {
         // Non-cooldown accounts go last

@@ -6,6 +6,7 @@ import { ConfirmDialog } from '@/components/UI/Modal';
 import { CooldownModal } from './CooldownModal';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useToast } from '@/components/UI/ToastContext';
+import { cooldownEndLabel, cooldownEndTooltip } from '@/utils/time';
 import { Pencil, Clock, CheckCircle, Trash2 } from 'lucide-react';
 
 interface AccountCardProps {
@@ -40,10 +41,11 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
       // In-app toast (auto-dismisses after 4 s via ToastContext)
       addToast(`${account.label} on ${service.name} is now available`, 'success');
       setFlash(true);
-      setTimeout(() => setFlash(false), 2100);
+      const t = setTimeout(() => setFlash(false), 2100);
       // OS notification is handled by main-process scheduler — no duplicate call here
+      return () => clearTimeout(t);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expired]);
 
   const markAvailable = () => {
@@ -75,6 +77,10 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
     }
     return <Badge variant="unknown">Unknown</Badge>;
   };
+
+  // End-time annotation — computed once per render, shown only on hover
+  const endLabel   = account.status === 'cooldown' ? cooldownEndLabel(account.cooldownUntil) : '';
+  const endTooltip = account.status === 'cooldown' ? cooldownEndTooltip(account.cooldownUntil) : '';
 
   return (
     <>
@@ -157,6 +163,35 @@ export function AccountCard({ account, service, onUpdate, onDelete, onNotify }: 
             </span>
           )}
         </div>
+
+        {/* End-time annotation — hover only, placed before badge so alignment matches Available */}
+        {endLabel && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              opacity: hovering ? 1 : 0,
+              transition: 'opacity 150ms',
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ color: 'var(--text-muted)', fontSize: '11px', userSelect: 'none' }}>·</span>
+            <span
+              title={endTooltip}
+              style={{
+                fontSize: '11px',
+                color: 'var(--text-muted)',
+                fontFamily: 'Inter, system-ui, sans-serif',
+                fontWeight: 400,
+                whiteSpace: 'nowrap',
+                cursor: 'default',
+              }}
+            >
+              ends {endLabel}
+            </span>
+          </div>
+        )}
 
         {/* Status badge */}
         <div style={{ flexShrink: 0 }}>

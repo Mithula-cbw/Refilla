@@ -42,6 +42,13 @@ export function MasterSearch({ vaultServices, vaultAccounts, onResultClick }: Ma
     setQuery('');
   };
 
+  // Clear debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setShowDropdown(false);

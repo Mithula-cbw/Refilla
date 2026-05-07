@@ -21,8 +21,8 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error(`ErrorBoundary caught in ${this.props.tabName}:`, error, info);
+  componentDidCatch(_error: Error, _info: ErrorInfo) {
+    // Errors are surfaced in the UI; no console output in production.
   }
 
   handleReset = () => this.setState({ hasError: false, error: null });

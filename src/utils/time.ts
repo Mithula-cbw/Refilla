@@ -1,4 +1,4 @@
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 
 // ─── Countdown Formatting ──────────────────────────────────────────────────────
 
@@ -93,7 +93,11 @@ export function isCooldownExpired(cooldownUntil: string | null): boolean {
  * Format a datetime string for local display.
  */
 export function formatDateTime(iso: string): string {
-  return format(new Date(iso), 'MMM d, yyyy h:mm a');
+  const d = new Date(iso);
+  return d.toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  });
 }
 
 /**
@@ -142,4 +146,58 @@ export function toDateTimeLocal(iso: string): string {
  */
 export function fromDateTimeLocal(val: string): string {
   return new Date(val).toISOString();
+}
+
+// ─── Cooldown End-Time Display ─────────────────────────────────────────────────
+
+/**
+ * Short label for the cooldown end time, shown beside the countdown.
+ * Rules:
+ *  - same calendar day  → "today, 9:30 PM"
+ *  - next calendar day  → "tomorrow, 9:30 PM"
+ *  - any other day      → "14 May, 9:30 PM"
+ * Returns empty string if cooldownUntil is null/expired.
+ */
+export function cooldownEndLabel(cooldownUntil: string | null): string {
+  if (!cooldownUntil) return '';
+  const end = new Date(cooldownUntil);
+  if (end.getTime() <= Date.now()) return '';
+
+  const timeStr = end.toLocaleTimeString(undefined, {
+    hour: 'numeric', minute: '2-digit',
+  });
+
+  const now = new Date();
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrowMidnight = new Date(todayMidnight.getTime() + 86_400_000);
+  const endMidnight = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+
+  if (endMidnight.getTime() === todayMidnight.getTime()) {
+    return `today, ${timeStr}`;
+  }
+  if (endMidnight.getTime() === tomorrowMidnight.getTime()) {
+    return `tomorrow, ${timeStr}`;
+  }
+
+  const dateStr = end.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  return `${dateStr}, ${timeStr}`;
+}
+
+/**
+ * Full tooltip text for the cooldown end time.
+ * Format: "Thursday, 14 May 2026, 9:30 PM"
+ * Returns empty string if cooldownUntil is null/expired.
+ */
+export function cooldownEndTooltip(cooldownUntil: string | null): string {
+  if (!cooldownUntil) return '';
+  const end = new Date(cooldownUntil);
+  if (end.getTime() <= Date.now()) return '';
+  return end.toLocaleString(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }

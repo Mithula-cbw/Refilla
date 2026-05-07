@@ -39,14 +39,16 @@ function makeInitialState(cooldownUntil: string | null): CountdownState {
  * - `expired` becomes true exactly once, when the live tick crosses the
  *   deadline, then the interval stops.
  * - Tick rate: 1 s when < 5 min remaining; 30 s otherwise.
+ * - Pauses automatically when the document is hidden (visibilitychange),
+ *   resumes when it becomes visible again — zero CPU while hidden.
  */
 export function useCountdown(cooldownUntil: string | null): CountdownState {
   const [state, setState] = useState<CountdownState>(() => makeInitialState(cooldownUntil));
 
-  const cooldownRef   = useRef(cooldownUntil);
+  const cooldownRef    = useRef(cooldownUntil);
   const prevExpiredRef = useRef(false);       // edge-trigger: was it expired last tick?
-  const intervalRef   = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isUrgentRef   = useRef(state.isUrgent);
+  const intervalRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isUrgentRef    = useRef(state.isUrgent);
 
   // Keep cooldown ref always current (no stale closure)
   useEffect(() => { cooldownRef.current = cooldownUntil; });
@@ -107,7 +109,29 @@ export function useCountdown(cooldownUntil: string | null): CountdownState {
     tick();
     schedule(initialUrgent ? 1_000 : 30_000);
 
-    return clear;
+    // ── Visibility: pause when hidden, resume when visible ─────────────────
+    const handleVisibility = () => {
+      if (document.hidden) {
+        // Window hidden → pause ticking (saves CPU/battery)
+        clear();
+      } else {
+        // Window visible → immediately recalculate and restart
+        const cd = cooldownRef.current;
+        if (!cd) return;
+        const { totalSeconds: secs } = getCooldownParts(cd);
+        const urgent = !isCooldownExpired(cd) && secs > 0 && secs < 300;
+        isUrgentRef.current = urgent;
+        tick();
+        schedule(urgent ? 1_000 : 30_000);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clear();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cooldownUntil]);
 

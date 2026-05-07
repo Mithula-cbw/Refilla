@@ -20,10 +20,64 @@ if (process.platform === 'win32') {
   app.setAppUserModelId('Refilla');
 }
 
+// ─── Background performance switches ──────────────────────────────────────────
+// Allow renderer to keep running at normal speed; only throttle when hidden
+app.commandLine.appendSwitch('disable-renderer-backgrounding', 'false');
+app.commandLine.appendSwitch('renderer-process-limit', '2');
+
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
-// Notification timers: accountId -> NodeJS.Timeout
+
+// ─── Smart notification scheduler ────────────────────────────────────────────
+// Single chained setTimeout (zero CPU between resets).
+// accountId → active timer handle
 const notificationTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+
+/**
+ * Cancel all existing notification timers, then scan accounts once and set
+ * exactly ONE setTimeout per account that has an upcoming reset.
+ * On fire: send notification, then re-schedule for the next reset.
+ */
+function scheduleNotifications() {
+  const accounts = store.get('accounts') as any[];
+  const services = store.get('services') as any[];
+  const notificationsEnabled = store.get('notificationsEnabled') as boolean;
+
+  // Cancel any running timers first
+  notificationTimers.forEach((t) => clearTimeout(t));
+  notificationTimers.clear();
+
+  if (!notificationsEnabled) return;
+
+  for (const account of accounts) {
+    if (account.status === 'cooldown' && account.cooldownUntil) {
+      const resetTime = new Date(account.cooldownUntil).getTime();
+      const delay = resetTime - Date.now();
+
+      if (delay > 0) {
+        const service = services.find((s: any) => s.id === account.serviceId);
+        const serviceName = service?.name ?? 'Unknown Service';
+
+        const fire = () => {
+          if (!Notification.isSupported()) return;
+          const notif = new Notification({
+            title: 'Refilla: Account Ready',
+            body: `${account.label} on ${serviceName} is now available`,
+            icon: path.join(__dirname, '../build/logo.png'),
+            timeoutType: 'default',
+          });
+          notif.show();
+          // Auto-close after 5 s
+          setTimeout(() => { try { notif.close(); } catch { /* noop */ } }, 5_000);
+          notificationTimers.delete(account.id);
+        };
+
+        const timer = setTimeout(fire, delay);
+        notificationTimers.set(account.id, timer);
+      }
+    }
+  }
+}
 
 // ─── Window creation ──────────────────────────────────────────────────────────
 function createWindow() {
@@ -62,6 +116,8 @@ function createWindow() {
   // Show once ready
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
+    // Initially visible — no throttling
+    mainWindow?.webContents.setBackgroundThrottling(false);
   });
 
   // Save window bounds on resize/move
@@ -73,10 +129,16 @@ function createWindow() {
   mainWindow.on('resize', saveBounds);
   mainWindow.on('move', saveBounds);
 
-  // Minimize to tray on close
+  // Throttle CPU when window is hidden (minimize to tray on close)
   mainWindow.on('close', (e) => {
     e.preventDefault();
+    mainWindow?.webContents.setBackgroundThrottling(true);
     mainWindow?.hide();
+  });
+
+  // Un-throttle when window comes back
+  mainWindow.on('show', () => {
+    mainWindow?.webContents.setBackgroundThrottling(false);
   });
 
   mainWindow.on('closed', () => {
@@ -86,12 +148,10 @@ function createWindow() {
 
 // ─── System Tray ──────────────────────────────────────────────────────────────
 function createTray() {
-  // Use the app logo from build/ folder
   const iconPath = path.join(__dirname, '../build/logo.png');
   let icon: Electron.NativeImage;
   if (fs.existsSync(iconPath)) {
     icon = nativeImage.createFromPath(iconPath);
-    // Resize to standard tray size (16x16 on Windows, 22x22 on Linux)
     icon = icon.resize({ width: 16, height: 16 });
   } else {
     icon = nativeImage.createEmpty();
@@ -121,65 +181,24 @@ function createTray() {
 
   tray.on('click', () => {
     if (mainWindow?.isVisible()) {
+      mainWindow.webContents.setBackgroundThrottling(true);
       mainWindow.hide();
     } else {
+      mainWindow?.webContents.setBackgroundThrottling(false);
       mainWindow?.show();
       mainWindow?.focus();
     }
   });
 }
 
-// ─── Schedule notifications for pending cooldowns ─────────────────────────────
-function scheduleNotifications() {
-  const accounts = store.get('accounts') as any[];
-  const services = store.get('services') as any[];
-  const notificationsEnabled = store.get('notificationsEnabled') as boolean;
-
-  if (!notificationsEnabled) return;
-
-  for (const account of accounts) {
-    if (account.status === 'cooldown' && account.cooldownUntil) {
-      const resetTime = new Date(account.cooldownUntil).getTime();
-      const now = Date.now();
-      const delay = resetTime - now;
-
-      if (delay > 0) {
-        const service = services.find((s: any) => s.id === account.serviceId);
-        const serviceName = service?.name ?? 'Unknown Service';
-
-        // Cancel any existing timer
-        if (notificationTimers.has(account.id)) {
-          clearTimeout(notificationTimers.get(account.id)!);
-        }
-
-        const timer = setTimeout(() => {
-          if (!Notification.isSupported()) return;
-          const notif = new Notification({
-            title: 'Refilla: Account Ready',
-            body: `${account.label} on ${serviceName} is now available`,
-            icon: path.join(__dirname, '../build/logo.png'),
-            timeoutType: 'default',
-          });
-          notif.show();
-          // Auto-close after 5 s so it doesn't pile up in the Action Center
-          setTimeout(() => { try { notif.close(); } catch {} }, 5_000);
-          notificationTimers.delete(account.id);
-        }, delay);
-
-        notificationTimers.set(account.id, timer);
-      }
-    }
-  }
-}
-
 // ─── IPC Handlers ─────────────────────────────────────────────────────────────
 function registerIPC() {
-  // Store: get all
+  // Store: get all (called once on React startup)
   ipcMain.handle('store:get', () => {
     return store.store;
   });
 
-  // Store: set partial
+  // Store: set partial (only on user-initiated changes)
   ipcMain.handle('store:set', (_event, data: Record<string, unknown>) => {
     for (const [key, value] of Object.entries(data)) {
       store.set(key as any, value);
@@ -199,7 +218,10 @@ function registerIPC() {
       mainWindow?.maximize();
     }
   });
-  ipcMain.on('window:close', () => mainWindow?.hide());
+  ipcMain.on('window:close', () => {
+    mainWindow?.webContents.setBackgroundThrottling(true);
+    mainWindow?.hide();
+  });
 
   // Notifications
   ipcMain.on('notification:show', (_event, { title, body }: { title: string; body: string }) => {
@@ -211,8 +233,7 @@ function registerIPC() {
         timeoutType: 'default',
       });
       notif.show();
-      // Auto-close after 5 s
-      setTimeout(() => { try { notif.close(); } catch {} }, 5_000);
+      setTimeout(() => { try { notif.close(); } catch { /* noop */ } }, 5_000);
     }
   });
 
@@ -257,6 +278,7 @@ app.whenReady().then(() => {
   scheduleNotifications();
 
   app.on('activate', () => {
+    // Window is never destroyed; just show if somehow missing
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
