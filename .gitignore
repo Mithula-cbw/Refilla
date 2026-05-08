@@ -1,1 +1,10 @@
 node_modules
+# Build outputs - never commit these
+dist/
+dist-electron/
+release/
+out/
+*.exe
+*.AppImage
+*.dmg
+*.asar

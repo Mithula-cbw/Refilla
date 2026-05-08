@@ -3,6 +3,7 @@ import { Titlebar } from '@/components/Titlebar/Titlebar';
 import { Sidebar } from '@/components/Sidebar/Sidebar';
 import { QuotaTracker } from '@/components/QuotaTracker/QuotaTracker';
 import { AIVault } from '@/components/AIVault/AIVault';
+import { AccountsTab } from '@/components/Accounts/AccountsTab';
 import { SettingsPanel } from '@/components/Settings/SettingsPanel';
 import { OnboardingOverlay } from '@/components/UI/OnboardingOverlay';
 import { SkeletonLoader } from '@/components/UI/SkeletonLoader';
@@ -10,11 +11,15 @@ import { ErrorBoundary } from '@/components/UI/ErrorBoundary';
 import { useStore } from '@/hooks/useStore';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useToast } from '@/components/UI/ToastContext';
-import { TabId } from '@/types';
+import { TabId, CentralAccount } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
+import { nextAvatarColor } from '@/utils/avatar';
 
 export default function App() {
   const {
-    store, loading, expiredCount, persist,
+    store, loading, expiredCount, migrationRan, persist,
+    setAccordionOpen, removeAccordionKey,
+    addCentralAccount, updateCentralAccount, deleteCentralAccount,
     addService, updateService, deleteService,
     addAccount, updateAccount, deleteAccount,
     addVaultService, updateVaultService, deleteVaultService,
@@ -53,6 +58,13 @@ export default function App() {
     }
   }, [loading, expiredCount]);
 
+  // Toast for migration
+  useEffect(() => {
+    if (!loading && migrationRan) {
+      addToast('Upgraded to v2.0 — your data has been migrated', 'info');
+    }
+  }, [loading, migrationRan]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -63,11 +75,22 @@ export default function App() {
       if (e.ctrlKey || e.metaKey) {
         if (e.key === '1') { e.preventDefault(); handleTabChange('quota'); }
         else if (e.key === '2') { e.preventDefault(); handleTabChange('vault'); }
+        else if (e.key === '3') { e.preventDefault(); handleTabChange('accounts'); }
         else if (e.key === ',') { e.preventDefault(); setSettingsOpen((p) => !p); }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  // Visibility change — pause/resume background throttling feedback
+  useEffect(() => {
+    const handleVisibility = () => {
+      // Renderer-side: the main process handles throttling via win events
+      // but we can re-trigger countdown recalculations on show
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
   const handleTabChange = (tab: TabId) => {
@@ -83,6 +106,50 @@ export default function App() {
 
   const handleOnboardingDone = () => {
     persist({ onboardingDone: true });
+  };
+
+  // Navigate to vault tab and scroll to service
+  const handleNavigateToVault = (vaultServiceId: string) => {
+    handleTabChange('vault');
+    setTimeout(() => {
+      const el = document.getElementById(`vault-section-${vaultServiceId}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  };
+
+  // Accordion toggles
+  const handleTrackerAccordion = (serviceId: string, open: boolean) => {
+    setAccordionOpen('tracker', serviceId, open);
+  };
+  const handleVaultAccordion = (serviceId: string, open: boolean) => {
+    setAccordionOpen('vault', serviceId, open);
+  };
+
+  // Delete service: also clean up accordion key
+  const handleDeleteService = async (id: string) => {
+    await deleteService(id);
+    removeAccordionKey('tracker', id);
+  };
+  const handleDeleteVaultService = async (id: string) => {
+    await deleteVaultService(id);
+    removeAccordionKey('vault', id);
+  };
+
+  // Handle delete central account: also remove from tracker and vault
+  const handleDeleteCentralAccount = async (id: string) => {
+    // Remove linked tracker accounts
+    const linkedTracker = store.accounts.filter((a) => a.centralAccountId === id);
+    if (linkedTracker.length > 0) {
+      const newAccounts = store.accounts.filter((a) => a.centralAccountId !== id);
+      await persist({ accounts: newAccounts });
+    }
+    // Remove linked vault accounts
+    const linkedVault = store.vaultAccounts.filter((a) => a.centralAccountId === id);
+    if (linkedVault.length > 0) {
+      const newVaultAccounts = store.vaultAccounts.filter((a) => a.centralAccountId !== id);
+      await persist({ vaultAccounts: newVaultAccounts });
+    }
+    await deleteCentralAccount(id);
   };
 
   if (loading) {
@@ -126,17 +193,21 @@ export default function App() {
               <QuotaTracker
                 services={store.services}
                 accounts={store.accounts}
+                centralAccounts={store.centralAccounts}
+                accordionState={store.accordionState}
                 filter={store.quotaFilter}
                 sort={store.quotaSort}
                 onFilterChange={(f) => persist({ quotaFilter: f })}
                 onSortChange={(s) => persist({ quotaSort: s })}
                 onAddService={addService}
                 onUpdateService={updateService}
-                onDeleteService={deleteService}
+                onDeleteService={handleDeleteService}
                 onAddAccount={addAccount}
                 onUpdateAccount={updateAccount}
                 onDeleteAccount={deleteAccount}
                 onNotify={notify}
+                onAccordionToggle={handleTrackerAccordion}
+                onGoToAccountsTab={() => handleTabChange('accounts')}
               />
             </ErrorBoundary>
           )}
@@ -145,12 +216,31 @@ export default function App() {
               <AIVault
                 vaultServices={store.vaultServices}
                 vaultAccounts={store.vaultAccounts}
+                centralAccounts={store.centralAccounts}
+                accordionState={store.accordionState}
                 onAddVaultService={addVaultService}
                 onUpdateVaultService={updateVaultService}
-                onDeleteVaultService={deleteVaultService}
+                onDeleteVaultService={handleDeleteVaultService}
                 onAddVaultAccount={addVaultAccount}
                 onUpdateVaultAccount={updateVaultAccount}
                 onDeleteVaultAccount={deleteVaultAccount}
+                onAccordionToggle={handleVaultAccordion}
+                onGoToAccountsTab={() => handleTabChange('accounts')}
+              />
+            </ErrorBoundary>
+          )}
+          {activeTab === 'accounts' && (
+            <ErrorBoundary tabName="Accounts">
+              <AccountsTab
+                centralAccounts={store.centralAccounts}
+                trackerAccounts={store.accounts}
+                vaultAccounts={store.vaultAccounts}
+                services={store.services}
+                vaultServices={store.vaultServices}
+                onAdd={addCentralAccount}
+                onUpdate={updateCentralAccount}
+                onDelete={handleDeleteCentralAccount}
+                onNavigateToVault={handleNavigateToVault}
               />
             </ErrorBoundary>
           )}

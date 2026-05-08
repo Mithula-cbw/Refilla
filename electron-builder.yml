@@ -13,14 +13,13 @@ files:
   - dist-electron/**/*
   - build/icon.ico
   - build/icon.png
-  - "!**/node_modules/*/{README.md,readme.md}"
-  - "!**/node_modules/*/{test,tests,__tests__}/**"
-  - "!**/node_modules/**/*.map"
-  - "!**/node_modules/**/*.ts"
+  - "!**/node_modules/*/{README,readme,CHANGELOG}*"
+  - "!**/node_modules/*/{test,tests,__tests__,spec}/**"
+  - "!**/node_modules/**/*.{map,ts,md}"
+  - "!**/{.git,.svn,.DS_Store}"
+  - "!**/node_modules/.cache/**"
   - "!**/*.{iml,hprof,orig,pyc,pyo,rbc,swp}"
   - "!**/._*"
-  - "!**/{.DS_Store,.git,.svn}"
-  - "!**/node_modules/.cache/**"
 
 win:
   target:

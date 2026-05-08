@@ -1,3 +1,15 @@
+// ─── Central Accounts (v2.0) ─────────────────────────────────────────────────
+
+export interface CentralAccount {
+  id: string;
+  label: string;
+  color: string;       // auto-assigned avatar color
+  browsers: string[];  // e.g. ["Chrome", "Firefox"]
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ─── Quota Tracker (Tab 1) ────────────────────────────────────────────────────
 
 export interface Service {
@@ -14,7 +26,7 @@ export type AccountStatus = 'available' | 'cooldown' | 'unknown';
 export interface Account {
   id: string;
   serviceId: string;
-  label: string;
+  centralAccountId: string; // references CentralAccount.id
   status: AccountStatus;
   cooldownUntil: string | null;  // ISO datetime
   notes: string;
@@ -44,17 +56,26 @@ export interface VaultEntry {
 export interface VaultAccount {
   id: string;
   vaultServiceId: string;
-  accountLabel: string;
+  centralAccountId: string; // references CentralAccount.id
   entries: VaultEntry[];
   createdAt: string;
   updatedAt: string;
 }
 
+// ─── Accordion State ──────────────────────────────────────────────────────────
+
+export interface AccordionState {
+  tracker: Record<string, boolean>;
+  vault: Record<string, boolean>;
+}
+
 // ─── App Store Shape ──────────────────────────────────────────────────────────
 
 export interface AppStore {
+  schemaVersion: number;
   theme: 'dark' | 'light';
-  activeTab: 'quota' | 'vault';
+  activeTab: TabId;
+  centralAccounts: CentralAccount[];
   services: Service[];
   accounts: Account[];
   vaultServices: VaultService[];
@@ -64,6 +85,8 @@ export interface AppStore {
   quotaSort: SortType;
   notificationsEnabled: boolean;
   onboardingDone: boolean;
+  accordionState: AccordionState;
+  migrationErrors?: string[];
 }
 
 // ─── UI State ─────────────────────────────────────────────────────────────────
@@ -71,7 +94,7 @@ export interface AppStore {
 export type FilterType = 'all' | 'available' | 'cooldown' | 'unknown';
 export type SortType = 'name' | 'status' | 'resetTime';
 
-export type TabId = 'quota' | 'vault';
+export type TabId = 'quota' | 'vault' | 'accounts';
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 

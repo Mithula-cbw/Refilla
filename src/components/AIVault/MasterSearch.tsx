@@ -1,15 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { VaultService, VaultAccount } from '@/types';
+import { VaultService, VaultAccount, CentralAccount } from '@/types';
 import { searchVault, SearchResult, truncate } from '@/utils/search';
 import { Search, X } from 'lucide-react';
 
 interface MasterSearchProps {
   vaultServices: VaultService[];
   vaultAccounts: VaultAccount[];
+  centralAccounts: CentralAccount[];
   onResultClick: (serviceId: string, accountId: string, entryId: string) => void;
 }
 
-export function MasterSearch({ vaultServices, vaultAccounts, onResultClick }: MasterSearchProps) {
+export function MasterSearch({ vaultServices, vaultAccounts, centralAccounts, onResultClick }: MasterSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -18,10 +19,10 @@ export function MasterSearch({ vaultServices, vaultAccounts, onResultClick }: Ma
 
   const runSearch = useCallback((q: string) => {
     if (!q.trim()) { setResults([]); setShowDropdown(false); return; }
-    const r = searchVault(q, vaultServices, vaultAccounts);
+    const r = searchVault(q, vaultServices, vaultAccounts, centralAccounts);
     setResults(r);
     setShowDropdown(true);
-  }, [vaultServices, vaultAccounts]);
+  }, [vaultServices, vaultAccounts, centralAccounts]);
 
   const handleChange = (q: string) => {
     setQuery(q);

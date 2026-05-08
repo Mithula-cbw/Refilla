@@ -1,4 +1,4 @@
-import { VaultAccount, VaultService } from '@/types';
+import { VaultAccount, VaultService, CentralAccount } from '@/types';
 
 export interface SearchResult {
   serviceId: string;
@@ -19,7 +19,8 @@ export interface SearchResult {
 export function searchVault(
   query: string,
   vaultServices: VaultService[],
-  vaultAccounts: VaultAccount[]
+  vaultAccounts: VaultAccount[],
+  centralAccounts: CentralAccount[]
 ): SearchResult[] {
   if (!query.trim()) return [];
   const q = query.toLowerCase();
@@ -29,15 +30,18 @@ export function searchVault(
     const service = vaultServices.find((s) => s.id === account.vaultServiceId);
     if (!service) continue;
 
+    const ca = centralAccounts.find((c) => c.id === account.centralAccountId);
+    const accountLabel = ca?.label ?? '';
+
     // Match accountLabel
-    if (account.accountLabel.toLowerCase().includes(q)) {
+    if (accountLabel.toLowerCase().includes(q)) {
       for (const entry of account.entries) {
         results.push({
           serviceId: service.id,
           serviceName: service.name,
           serviceIcon: service.icon,
           accountId: account.id,
-          accountLabel: account.accountLabel,
+          accountLabel,
           entryId: entry.id,
           key: entry.key,
           value: entry.value,
@@ -63,7 +67,7 @@ export function searchVault(
           serviceName: service.name,
           serviceIcon: service.icon,
           accountId: account.id,
-          accountLabel: account.accountLabel,
+          accountLabel,
           entryId: entry.id,
           key: entry.key,
           value: entry.value,

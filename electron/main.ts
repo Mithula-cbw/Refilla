@@ -11,7 +11,7 @@ import {
 } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { store, getDataPath } from './store';
+import { store, getDataPath, runMigration } from './store';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -21,25 +21,21 @@ if (process.platform === 'win32') {
 }
 
 // ─── Background performance switches ──────────────────────────────────────────
-// Allow renderer to keep running at normal speed; only throttle when hidden
 app.commandLine.appendSwitch('disable-renderer-backgrounding', 'false');
 app.commandLine.appendSwitch('renderer-process-limit', '2');
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 
+// Track whether migration ran (to show toast in renderer)
+let migrationRan = false;
+
 // ─── Smart notification scheduler ────────────────────────────────────────────
-// Single chained setTimeout (zero CPU between resets).
-// accountId → active timer handle
 const notificationTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
-/**
- * Cancel all existing notification timers, then scan accounts once and set
- * exactly ONE setTimeout per account that has an upcoming reset.
- * On fire: send notification, then re-schedule for the next reset.
- */
 function scheduleNotifications() {
   const accounts = store.get('accounts') as any[];
+  const centralAccounts = store.get('centralAccounts') as any[];
   const services = store.get('services') as any[];
   const notificationsEnabled = store.get('notificationsEnabled') as boolean;
 
@@ -57,17 +53,18 @@ function scheduleNotifications() {
       if (delay > 0) {
         const service = services.find((s: any) => s.id === account.serviceId);
         const serviceName = service?.name ?? 'Unknown Service';
+        const ca = centralAccounts.find((c: any) => c.id === account.centralAccountId);
+        const accountLabel = ca?.label ?? 'Unknown Account';
 
         const fire = () => {
           if (!Notification.isSupported()) return;
           const notif = new Notification({
             title: 'Refilla: Account Ready',
-            body: `${account.label} on ${serviceName} is now available`,
+            body: `${accountLabel} on ${serviceName} is now available`,
             icon: path.join(__dirname, '../build/logo.png'),
             timeoutType: 'default',
           });
           notif.show();
-          // Auto-close after 5 s
           setTimeout(() => { try { notif.close(); } catch { /* noop */ } }, 5_000);
           notificationTimers.delete(account.id);
         };
@@ -195,7 +192,10 @@ function createTray() {
 function registerIPC() {
   // Store: get all (called once on React startup)
   ipcMain.handle('store:get', () => {
-    return store.store;
+    const data = store.store as unknown as Record<string, unknown>;
+    // Attach migration flag
+    (data as any).__migrationRan = migrationRan;
+    return data;
   });
 
   // Store: set partial (only on user-initiated changes)
@@ -272,13 +272,15 @@ function registerIPC() {
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 app.whenReady().then(() => {
+  // Run migration before anything else
+  migrationRan = runMigration();
+
   createWindow();
   createTray();
   registerIPC();
   scheduleNotifications();
 
   app.on('activate', () => {
-    // Window is never destroyed; just show if somehow missing
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });

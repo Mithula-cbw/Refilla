@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Service, Account, FilterType, SortType } from '@/types';
+import { Service, Account, FilterType, SortType, CentralAccount, AccordionState } from '@/types';
 import { ServiceSection } from './ServiceSection';
 import { ServiceModal } from './AddServiceModal';
 import { Button } from '@/components/UI/Button';
-import { Plus, ArrowUpDown, Filter } from 'lucide-react';
+import { Plus, ArrowUpDown } from 'lucide-react';
 
 interface QuotaTrackerProps {
   services: Service[];
   accounts: Account[];
+  centralAccounts: CentralAccount[];
+  accordionState: AccordionState;
   filter: FilterType;
   sort: SortType;
   onFilterChange: (f: FilterType) => void;
@@ -19,6 +21,8 @@ interface QuotaTrackerProps {
   onUpdateAccount: (a: Account) => void;
   onDeleteAccount: (id: string) => void;
   onNotify: (title: string, body: string) => void;
+  onAccordionToggle: (serviceId: string, open: boolean) => void;
+  onGoToAccountsTab: () => void;
 }
 
 const FILTER_OPTIONS: { value: FilterType; label: string; dot?: string }[] = [
@@ -35,11 +39,12 @@ const SORT_OPTIONS: { value: SortType; label: string }[] = [
 ];
 
 export function QuotaTracker({
-  services, accounts, filter, sort,
+  services, accounts, centralAccounts, accordionState,
+  filter, sort,
   onFilterChange, onSortChange,
   onAddService, onUpdateService, onDeleteService,
   onAddAccount, onUpdateAccount, onDeleteAccount,
-  onNotify,
+  onNotify, onAccordionToggle, onGoToAccountsTab,
 }: QuotaTrackerProps) {
   const [showAddService, setShowAddService] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -48,12 +53,15 @@ export function QuotaTracker({
 
   const sortAccounts = (accs: Account[]): Account[] => {
     return [...accs].sort((a, b) => {
-      if (sort === 'name') return a.label.localeCompare(b.label);
+      if (sort === 'name') {
+        const la = centralAccounts.find((c) => c.id === a.centralAccountId)?.label ?? '';
+        const lb = centralAccounts.find((c) => c.id === b.centralAccountId)?.label ?? '';
+        return la.localeCompare(lb);
+      }
       if (sort === 'status') {
         const order: Record<string, number> = { available: 0, cooldown: 1, unknown: 2 };
         const statusDiff = (order[a.status] ?? 9) - (order[b.status] ?? 9);
         if (statusDiff !== 0) return statusDiff;
-        
         if (a.status === 'cooldown' && b.status === 'cooldown') {
           if (!a.cooldownUntil && !b.cooldownUntil) return 0;
           if (!a.cooldownUntil) return 1;
@@ -63,7 +71,6 @@ export function QuotaTracker({
         return 0;
       }
       if (sort === 'resetTime') {
-        // Non-cooldown accounts go last
         if (!a.cooldownUntil && !b.cooldownUntil) return 0;
         if (!a.cooldownUntil) return 1;
         if (!b.cooldownUntil) return -1;
@@ -73,7 +80,6 @@ export function QuotaTracker({
     });
   };
 
-  // Summary counts for the toolbar
   const cooldownCount = accounts.filter((a) => a.status === 'cooldown').length;
   const availableCount = accounts.filter((a) => a.status === 'available').length;
 
@@ -138,18 +144,12 @@ export function QuotaTracker({
                   aria-pressed={active}
                   aria-label={`Filter: ${f.label}`}
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    padding: '4px 10px',
-                    borderRadius: '5px',
-                    border: 'none',
+                    display: 'inline-flex', alignItems: 'center', gap: '5px',
+                    padding: '4px 10px', borderRadius: '5px', border: 'none',
                     background: active ? 'var(--bg-primary)' : 'transparent',
                     color: active ? 'var(--text-primary)' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    fontWeight: active ? 600 : 400,
-                    transition: 'all 150ms',
+                    cursor: 'pointer', fontSize: '12px',
+                    fontWeight: active ? 600 : 400, transition: 'all 150ms',
                     fontFamily: 'Inter, system-ui, sans-serif',
                     boxShadow: active ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
                     whiteSpace: 'nowrap',
@@ -157,12 +157,8 @@ export function QuotaTracker({
                 >
                   {f.dot && (
                     <span style={{
-                      width: '6px',
-                      height: '6px',
-                      borderRadius: '50%',
-                      background: f.dot,
-                      flexShrink: 0,
-                      opacity: active ? 1 : 0.5,
+                      width: '6px', height: '6px', borderRadius: '50%',
+                      background: f.dot, flexShrink: 0, opacity: active ? 1 : 0.5,
                     }} />
                   )}
                   {f.label}
@@ -187,15 +183,11 @@ export function QuotaTracker({
                     aria-pressed={active}
                     aria-label={`Sort by ${s.label}`}
                     style={{
-                      padding: '4px 10px',
-                      borderRadius: '5px',
-                      border: 'none',
+                      padding: '4px 10px', borderRadius: '5px', border: 'none',
                       background: active ? 'var(--bg-primary)' : 'transparent',
                       color: active ? 'var(--text-primary)' : 'var(--text-muted)',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: active ? 600 : 400,
-                      transition: 'all 150ms',
+                      cursor: 'pointer', fontSize: '12px',
+                      fontWeight: active ? 600 : 400, transition: 'all 150ms',
                       fontFamily: 'Inter, system-ui, sans-serif',
                       boxShadow: active ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
                       whiteSpace: 'nowrap',
@@ -228,13 +220,8 @@ export function QuotaTracker({
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
         {services.length === 0 ? (
           <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            gap: '16px',
-            color: 'var(--text-muted)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', height: '100%', gap: '16px', color: 'var(--text-muted)',
           }}>
             <div style={{ fontSize: '52px', filter: 'grayscale(0.3)' }}>🤖</div>
             <div style={{ textAlign: 'center' }}>
@@ -254,6 +241,7 @@ export function QuotaTracker({
             const serviceAccounts = sortAccounts(
               accounts.filter((a) => a.serviceId === service.id)
             );
+            const isOpen = accordionState.tracker[service.id] ?? false;
             return (
               <ServiceSection
                 key={service.id}
@@ -261,12 +249,16 @@ export function QuotaTracker({
                 accounts={serviceAccounts}
                 filter={filter}
                 allServices={services}
+                centralAccounts={centralAccounts}
+                accordionOpen={isOpen}
+                onAccordionToggle={(open) => onAccordionToggle(service.id, open)}
                 onUpdateAccount={onUpdateAccount}
                 onDeleteAccount={onDeleteAccount}
                 onAddAccount={onAddAccount}
                 onEditService={(s) => setEditingService(s)}
                 onDeleteService={onDeleteService}
                 onNotify={onNotify}
+                onGoToAccountsTab={onGoToAccountsTab}
               />
             );
           })

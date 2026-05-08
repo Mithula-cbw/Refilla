@@ -50,6 +50,7 @@ export function Badge({ variant = 'info', children, style, className }: BadgePro
       style={{
         display: 'inline-flex',
         alignItems: 'center',
+        justifyContent: 'center',
         gap: '4px',
         padding: '2px 8px',
         borderRadius: '99px',
@@ -57,6 +58,8 @@ export function Badge({ variant = 'info', children, style, className }: BadgePro
         fontWeight: 600,
         whiteSpace: 'nowrap',
         letterSpacing: '0.01em',
+        width: '94px',
+        boxSizing: 'border-box',
         ...badgeStyles[variant],
         ...style,
       }}
@@ -84,6 +87,7 @@ export function CooldownBadge({ label, isUrgent, secondsLeft, serviceColor }: Co
   const baseStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '5px',
     padding: '2px 9px',
     borderRadius: '99px',
@@ -91,6 +95,8 @@ export function CooldownBadge({ label, isUrgent, secondsLeft, serviceColor }: Co
     fontWeight: 600,
     whiteSpace: 'nowrap',
     letterSpacing: '0.01em',
+    width: '94px',
+    boxSizing: 'border-box',
     transition: 'all 300ms ease',
     fontFamily: isNow ? 'Inter, system-ui, sans-serif' : 'JetBrains Mono, monospace',
     fontVariantNumeric: 'tabular-nums',
