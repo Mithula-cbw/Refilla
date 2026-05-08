@@ -1,54 +1,63 @@
 import { useState } from 'react';
-import { VaultService, VaultAccount } from '@/types';
+import { VaultService, VaultAccount, CentralAccount } from '@/types';
 import { VaultAccountCard } from './VaultAccountCard';
 import { Modal, ConfirmDialog } from '@/components/UI/Modal';
-import { Input } from '@/components/UI/Input';
 import { Button, IconButton } from '@/components/UI/Button';
+import { CentralAccountDropdown } from '@/components/Accounts/CentralAccountDropdown';
 import { v4 as uuidv4 } from 'uuid';
 import { ChevronDown, ChevronRight, Plus, Search, X, Pencil, Trash2 } from 'lucide-react';
 
 interface VaultServiceSectionProps {
   service: VaultService;
   accounts: VaultAccount[];
+  centralAccounts: CentralAccount[];
   flashInfo?: { accountId: string; entryId: string };
   allServices: VaultService[];
+  accordionOpen: boolean;
+  onAccordionToggle: (open: boolean) => void;
   onUpdateAccount: (va: VaultAccount) => void;
   onDeleteAccount: (id: string) => void;
   onAddAccount: (va: VaultAccount) => void;
   onEditService: (vs: VaultService) => void;
   onDeleteService: (id: string) => void;
+  onGoToAccountsTab: () => void;
 }
 
 export function VaultServiceSection({
-  service, accounts, flashInfo, allServices,
+  service, accounts, centralAccounts, flashInfo, allServices,
+  accordionOpen, onAccordionToggle,
   onUpdateAccount, onDeleteAccount, onAddAccount,
-  onEditService, onDeleteService,
+  onEditService, onDeleteService, onGoToAccountsTab,
 }: VaultServiceSectionProps) {
-  const [expanded, setExpanded] = useState(true);
   const [hovering, setHovering] = useState(false);
   const [showSectionSearch, setShowSectionSearch] = useState(false);
   const [sectionQuery, setSectionQuery] = useState('');
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [showDeleteSvc, setShowDeleteSvc] = useState(false);
-  const [newAccountLabel, setNewAccountLabel] = useState('');
-  const [newAccountLabelError, setNewAccountLabelError] = useState('');
+  const [selectedCA, setSelectedCA] = useState<CentralAccount | null>(null);
+  const [addError, setAddError] = useState('');
 
   const totalEntries = accounts.reduce((s, a) => s + a.entries.length, 0);
   const canDelete = accounts.length === 0;
+  const linkedCAIds = accounts.map((a) => a.centralAccountId);
+  const expanded = accordionOpen;
 
   const handleAddAccount = () => {
-    const trimmed = newAccountLabel.trim();
-    if (!trimmed) { setNewAccountLabelError('Label is required'); return; }
+    if (!selectedCA) { setAddError('Please select an account'); return; }
+    const dupe = accounts.find((a) => a.centralAccountId === selectedCA.id);
+    if (dupe) { setAddError(`This account is already in ${service.name}`); return; }
+
     const now = new Date().toISOString();
     onAddAccount({
       id: uuidv4(),
       vaultServiceId: service.id,
-      accountLabel: trimmed,
+      centralAccountId: selectedCA.id,
       entries: [],
       createdAt: now,
       updatedAt: now,
     });
-    setNewAccountLabel('');
+    setSelectedCA(null);
+    setAddError('');
     setShowAddAccount(false);
   };
 
@@ -67,7 +76,7 @@ export function VaultServiceSection({
           transition: 'all 200ms ease',
           userSelect: 'none',
         }}
-        onClick={() => setExpanded((p) => !p)}
+        onClick={() => onAccordionToggle(!expanded)}
         role="button"
         aria-expanded={expanded}
         aria-label={`${service.name} vault section`}
@@ -99,9 +108,9 @@ export function VaultServiceSection({
           <IconButton
             icon={<Search size={13} />}
             label="Search within section"
-            onClick={() => { setShowSectionSearch((p) => !p); setExpanded(true); }}
+            onClick={() => { setShowSectionSearch((p) => !p); onAccordionToggle(true); }}
           />
-          <IconButton icon={<Plus size={13} />} label="Add account" onClick={() => { setShowAddAccount(true); setExpanded(true); }} />
+          <IconButton icon={<Plus size={13} />} label="Add account" onClick={() => { setShowAddAccount(true); onAccordionToggle(true); }} />
           <IconButton icon={<Pencil size={13} />} label="Edit service" onClick={() => onEditService(service)} />
           <IconButton
             icon={<Trash2 size={13} />}
@@ -151,36 +160,50 @@ export function VaultServiceSection({
               </Button>
             </div>
           ) : (
-            accounts.map((acc) => (
-              <VaultAccountCard
-                key={acc.id}
-                account={acc}
-                service={service}
-                sectionSearchQuery={sectionQuery}
-                flashEntryId={flashInfo?.accountId === acc.id ? flashInfo.entryId : undefined}
-                onUpdate={onUpdateAccount}
-                onDelete={onDeleteAccount}
-              />
-            ))
+            accounts.map((acc) => {
+              const ca = centralAccounts.find((c) => c.id === acc.centralAccountId);
+              return (
+                <VaultAccountCard
+                  key={acc.id}
+                  account={acc}
+                  service={service}
+                  centralAccount={ca}
+                  sectionSearchQuery={sectionQuery}
+                  flashEntryId={flashInfo?.accountId === acc.id ? flashInfo.entryId : undefined}
+                  onUpdate={onUpdateAccount}
+                  onDelete={onDeleteAccount}
+                />
+              );
+            })
           )}
         </div>
       )}
 
       {/* Add account modal */}
-      <Modal isOpen={showAddAccount} onClose={() => setShowAddAccount(false)} title={`Add Account — ${service.name}`} width={380}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <Input
-            id="vault-acc-label"
-            label="Account Label *"
-            placeholder="e.g. user@gmail.com"
-            value={newAccountLabel}
-            onChange={(e) => { setNewAccountLabel(e.target.value); setNewAccountLabelError(''); }}
-            error={newAccountLabelError}
-            autoFocus
-          />
+      <Modal
+        isOpen={showAddAccount}
+        onClose={() => { setShowAddAccount(false); setSelectedCA(null); setAddError(''); }}
+        title={`Add Account — ${service.name}`}
+        width={420}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minHeight: '280px' }}>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              Select Account *
+            </label>
+            <CentralAccountDropdown
+              centralAccounts={centralAccounts}
+              excludeIds={linkedCAIds}
+              onSelect={(ca) => { setSelectedCA(ca); setAddError(''); }}
+              onGoToAccountsTab={() => { setShowAddAccount(false); onGoToAccountsTab(); }}
+            />
+            {addError && (
+              <p style={{ fontSize: '11px', color: 'var(--red)', marginTop: '6px' }}>{addError}</p>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-            <Button variant="secondary" onClick={() => setShowAddAccount(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleAddAccount}>Add Account</Button>
+            <Button variant="secondary" onClick={() => { setShowAddAccount(false); setSelectedCA(null); setAddError(''); }}>Cancel</Button>
+            <Button variant="primary" onClick={handleAddAccount} disabled={!selectedCA}>Add Account</Button>
           </div>
         </div>
       </Modal>

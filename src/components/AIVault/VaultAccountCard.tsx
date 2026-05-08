@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { VaultAccount, VaultEntry, VaultService } from '@/types';
+import { VaultAccount, VaultEntry, VaultService, CentralAccount } from '@/types';
 import { EntryRow } from './EntryRow';
 import { v4 as uuidv4 } from 'uuid';
-import { Plus, Search, X, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/UI/Modal';
 import { Button } from '@/components/UI/Button';
+import { getAvatarInitial } from '@/utils/avatar';
 
 interface VaultAccountCardProps {
   account: VaultAccount;
   service: VaultService;
+  centralAccount?: CentralAccount;
   flashEntryId?: string;
   sectionSearchQuery?: string;
   onUpdate: (va: VaultAccount) => void;
@@ -16,7 +18,7 @@ interface VaultAccountCardProps {
 }
 
 export function VaultAccountCard({
-  account, service, flashEntryId, sectionSearchQuery = '',
+  account, service, centralAccount, flashEntryId, sectionSearchQuery = '',
   onUpdate, onDelete,
 }: VaultAccountCardProps) {
   const [showAddEntry, setShowAddEntry] = useState(false);
@@ -24,6 +26,9 @@ export function VaultAccountCard({
   const [newValue, setNewValue] = useState('');
   const [newTags, setNewTags] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const accountLabel = centralAccount?.label ?? '(unknown account)';
+  const avatarColor = centralAccount?.color ?? '#555d7a';
 
   const allKeys = [...new Set(account.entries.map((e) => e.key))];
 
@@ -78,8 +83,18 @@ export function VaultAccountCard({
         borderBottom: account.entries.length > 0 || showAddEntry ? '1px solid var(--border)' : 'none',
         background: 'var(--bg-tertiary)',
       }}>
+        {/* Avatar */}
+        <div style={{
+          width: '24px', height: '24px', borderRadius: '50%',
+          background: avatarColor, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '10px', fontWeight: 700, color: '#fff',
+        }}>
+          {getAvatarInitial(accountLabel)}
+        </div>
+
         <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', flex: 1 }}>
-          {account.accountLabel}
+          {accountLabel}
         </span>
         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
           {account.entries.length} {account.entries.length === 1 ? 'entry' : 'entries'}
@@ -172,7 +187,7 @@ export function VaultAccountCard({
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={() => onDelete(account.id)}
         title="Delete Account"
-        message={`Delete "${account.accountLabel}" and all its entries? This cannot be undone.`}
+        message={`Delete "${accountLabel}" and all its entries? This cannot be undone.`}
         confirmLabel="Delete"
         destructive
       />

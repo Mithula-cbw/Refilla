@@ -1,4 +1,4 @@
-import { BarChart2, BookOpen } from 'lucide-react';
+import { BarChart2, BookOpen, Users } from 'lucide-react';
 import { TabId } from '@/types';
 
 interface SidebarProps {
@@ -9,6 +9,7 @@ interface SidebarProps {
 const tabs: { id: TabId; label: string; icon: typeof BarChart2; description: string }[] = [
   { id: 'quota', label: 'Quota Tracker', icon: BarChart2, description: 'Manage account quotas & cooldowns' },
   { id: 'vault', label: 'AI Vault', icon: BookOpen, description: 'Store conversation context & notes' },
+  { id: 'accounts', label: 'Accounts', icon: Users, description: 'Manage your account identities' },
 ];
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
@@ -90,7 +91,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         lineHeight: 1.5,
       }}>
         <div style={{ marginBottom: '2px' }}>⌘1 Quota Tracker</div>
-        <div>⌘2 AI Vault</div>
+        <div style={{ marginBottom: '2px' }}>⌘2 AI Vault</div>
+        <div>⌘3 Accounts</div>
       </div>
     </aside>
   );

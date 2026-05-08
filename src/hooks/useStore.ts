@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
-import { AppStore, Service, Account, VaultService, VaultAccount } from '@/types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { AppStore, Service, Account, VaultService, VaultAccount, CentralAccount, AccordionState } from '@/types';
 import { isCooldownExpired } from '@/utils/time';
 
 const DEFAULT_STORE: AppStore = {
+  schemaVersion: 2,
   theme: 'dark',
   activeTab: 'quota',
+  centralAccounts: [],
   services: [],
   accounts: [],
   vaultServices: [],
@@ -14,18 +16,30 @@ const DEFAULT_STORE: AppStore = {
   quotaSort: 'name',
   notificationsEnabled: true,
   onboardingDone: false,
+  accordionState: { tracker: {}, vault: {} },
 };
 
 export function useStore() {
   const [store, setStoreState] = useState<AppStore>(DEFAULT_STORE);
   const [loading, setLoading] = useState(true);
   const [expiredCount, setExpiredCount] = useState(0);
+  const [migrationRan, setMigrationRan] = useState(false);
+
+  // Debounce accordion writes
+  const accordionDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load on mount
   useEffect(() => {
     (async () => {
       try {
-        const data = await window.electronAPI.getStore();
+        const data = await window.electronAPI.getStore() as AppStore & { __migrationRan?: boolean };
+
+        // Check if migration ran
+        if (data.__migrationRan) {
+          setMigrationRan(true);
+          delete (data as any).__migrationRan;
+        }
+
         // Auto-resolve expired cooldowns
         let expired = 0;
         const updatedAccounts = data.accounts.map((a: Account) => {
@@ -42,6 +56,11 @@ export function useStore() {
           await window.electronAPI.setStore({ accounts: updatedAccounts });
         }
 
+        // Ensure accordionState exists (safety for old data)
+        if (!data.accordionState) {
+          data.accordionState = { tracker: {}, vault: {} };
+        }
+
         setStoreState(data);
       } finally {
         setLoading(false);
@@ -51,7 +70,65 @@ export function useStore() {
 
   const persist = useCallback(async (updates: Partial<AppStore>) => {
     setStoreState((prev) => ({ ...prev, ...updates }));
-    await window.electronAPI.setStore(updates);
+    await window.electronAPI.setStore(updates as Record<string, unknown>);
+  }, []);
+
+  // ─── Accordion State ─────────────────────────────────────────────────────────
+  const setAccordionOpen = useCallback((
+    tab: 'tracker' | 'vault',
+    serviceId: string,
+    open: boolean
+  ) => {
+    setStoreState((prev) => {
+      const newState: AccordionState = {
+        ...prev.accordionState,
+        [tab]: {
+          ...prev.accordionState[tab],
+          [serviceId]: open,
+        },
+      };
+      // Debounce write
+      if (accordionDebounceRef.current) clearTimeout(accordionDebounceRef.current);
+      accordionDebounceRef.current = setTimeout(() => {
+        window.electronAPI.setStore({ accordionState: newState });
+      }, 300);
+      return { ...prev, accordionState: newState };
+    });
+  }, []);
+
+  const removeAccordionKey = useCallback((tab: 'tracker' | 'vault', serviceId: string) => {
+    setStoreState((prev) => {
+      const tabState = { ...prev.accordionState[tab] };
+      delete tabState[serviceId];
+      const newState: AccordionState = { ...prev.accordionState, [tab]: tabState };
+      window.electronAPI.setStore({ accordionState: newState });
+      return { ...prev, accordionState: newState };
+    });
+  }, []);
+
+  // ─── Central Accounts ────────────────────────────────────────────────────────
+  const addCentralAccount = useCallback(async (ca: CentralAccount) => {
+    setStoreState((prev) => {
+      const centralAccounts = [...prev.centralAccounts, ca];
+      window.electronAPI.setStore({ centralAccounts });
+      return { ...prev, centralAccounts };
+    });
+  }, []);
+
+  const updateCentralAccount = useCallback(async (ca: CentralAccount) => {
+    setStoreState((prev) => {
+      const centralAccounts = prev.centralAccounts.map((x) => (x.id === ca.id ? ca : x));
+      window.electronAPI.setStore({ centralAccounts });
+      return { ...prev, centralAccounts };
+    });
+  }, []);
+
+  const deleteCentralAccount = useCallback(async (id: string) => {
+    setStoreState((prev) => {
+      const centralAccounts = prev.centralAccounts.filter((x) => x.id !== id);
+      window.electronAPI.setStore({ centralAccounts });
+      return { ...prev, centralAccounts };
+    });
   }, []);
 
   // ─── Services ───────────────────────────────────────────────────────────────
@@ -118,11 +195,24 @@ export function useStore() {
     await persist({ vaultAccounts });
   }, [store.vaultAccounts, persist]);
 
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (accordionDebounceRef.current) clearTimeout(accordionDebounceRef.current);
+    };
+  }, []);
+
   return {
     store,
     loading,
     expiredCount,
+    migrationRan,
     persist,
+    // Accordion
+    setAccordionOpen,
+    removeAccordionKey,
+    // Central Accounts
+    addCentralAccount, updateCentralAccount, deleteCentralAccount,
     // Services
     addService, updateService, deleteService,
     // Accounts

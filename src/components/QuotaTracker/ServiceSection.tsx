@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Account, Service, FilterType } from '@/types';
+import { Account, Service, FilterType, CentralAccount } from '@/types';
 import { AccountCard } from './AccountCard';
 import { Badge } from '@/components/UI/Badge';
 import { Button, IconButton } from '@/components/UI/Button';
 import { ConfirmDialog, Modal } from '@/components/UI/Modal';
-import { Input, Select } from '@/components/UI/Input';
+import { Select } from '@/components/UI/Input';
+import { CentralAccountDropdown } from '@/components/Accounts/CentralAccountDropdown';
 import { ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { formatResetInterval } from '@/utils/time';
@@ -14,57 +15,65 @@ interface ServiceSectionProps {
   accounts: Account[];
   filter: FilterType;
   allServices: Service[];
+  centralAccounts: CentralAccount[];
+  accordionOpen: boolean;
+  onAccordionToggle: (open: boolean) => void;
   onUpdateAccount: (a: Account) => void;
   onDeleteAccount: (id: string) => void;
   onAddAccount: (a: Account) => void;
   onEditService: (s: Service) => void;
   onDeleteService: (id: string) => void;
   onNotify: (title: string, body: string) => void;
+  onGoToAccountsTab: () => void;
 }
 
 export function ServiceSection({
-  service, accounts, filter, allServices,
+  service, accounts, filter, allServices, centralAccounts,
+  accordionOpen, onAccordionToggle,
   onUpdateAccount, onDeleteAccount, onAddAccount,
-  onEditService, onDeleteService, onNotify,
+  onEditService, onDeleteService, onNotify, onGoToAccountsTab,
 }: ServiceSectionProps) {
-  const [expanded, setExpanded] = useState(true);
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [showDeleteSvc, setShowDeleteSvc] = useState(false);
   const [hovering, setHovering] = useState(false);
 
   // Add account form state
-  const [newLabel, setNewLabel] = useState('');
+  const [selectedCA, setSelectedCA] = useState<CentralAccount | null>(null);
   const [newStatus, setNewStatus] = useState<Account['status']>('available');
   const [newNotes, setNewNotes] = useState('');
-  const [newLabelError, setNewLabelError] = useState('');
+  const [addError, setAddError] = useState('');
 
   const filteredAccounts = accounts.filter((a) => filter === 'all' || a.status === filter);
 
   const availableCount = accounts.filter((a) => a.status === 'available').length;
   const cooldownCount = accounts.filter((a) => a.status === 'cooldown').length;
 
+  const linkedCAIds = accounts.map((a) => a.centralAccountId);
+
   const handleAddAccount = () => {
-    const trimmed = newLabel.trim();
-    if (!trimmed) { setNewLabelError('Label is required'); return; }
-    const dupe = accounts.find((a) => a.label.toLowerCase() === trimmed.toLowerCase());
-    if (dupe) { setNewLabelError('An account with this label already exists in this service'); return; }
+    if (!selectedCA) { setAddError('Please select an account'); return; }
+
+    // Uniqueness check
+    const dupe = accounts.find((a) => a.centralAccountId === selectedCA.id);
+    if (dupe) { setAddError(`This account is already in ${service.name}`); return; }
 
     const now = new Date().toISOString();
     onAddAccount({
       id: uuidv4(),
       serviceId: service.id,
-      label: trimmed,
+      centralAccountId: selectedCA.id,
       status: newStatus,
       cooldownUntil: null,
       notes: newNotes.trim(),
       createdAt: now,
       updatedAt: now,
     });
-    setNewLabel(''); setNewStatus('available'); setNewNotes(''); setNewLabelError('');
+    setSelectedCA(null); setNewStatus('available'); setNewNotes(''); setAddError('');
     setShowAddAccount(false);
   };
 
   const canDeleteService = accounts.length === 0;
+  const expanded = accordionOpen;
 
   return (
     <div style={{
@@ -88,23 +97,17 @@ export function ServiceSection({
           transition: 'all 200ms ease',
           userSelect: 'none',
         }}
-        onClick={() => setExpanded((p) => !p)}
+        onClick={() => onAccordionToggle(!expanded)}
         role="button"
         aria-expanded={expanded}
         aria-label={`${service.name} section`}
       >
-        {/* Service icon + color dot */}
+        {/* Service icon */}
         <div style={{
-          width: '32px',
-          height: '32px',
-          borderRadius: '8px',
-          background: `${service.color}22`,
-          border: `1px solid ${service.color}55`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '16px',
-          flexShrink: 0,
+          width: '32px', height: '32px', borderRadius: '8px',
+          background: `${service.color}22`, border: `1px solid ${service.color}55`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '16px', flexShrink: 0,
         }}>
           {service.icon}
         </div>
@@ -179,16 +182,20 @@ export function ServiceSection({
             </div>
           )}
 
-          {filteredAccounts.map((account) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              service={service}
-              onUpdate={onUpdateAccount}
-              onDelete={onDeleteAccount}
-              onNotify={onNotify}
-            />
-          ))}
+          {filteredAccounts.map((account) => {
+            const ca = centralAccounts.find((c) => c.id === account.centralAccountId);
+            return (
+              <AccountCard
+                key={account.id}
+                account={account}
+                service={service}
+                centralAccount={ca}
+                onUpdate={onUpdateAccount}
+                onDelete={onDeleteAccount}
+                onNotify={onNotify}
+              />
+            );
+          })}
 
           {/* Add account button (bottom) */}
           {accounts.length > 0 && (
@@ -196,18 +203,11 @@ export function ServiceSection({
               onClick={() => setShowAddAccount(true)}
               aria-label="Add account to this service"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px dashed var(--border)',
-                background: 'transparent',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                fontSize: '12px',
-                fontFamily: 'Inter, system-ui, sans-serif',
-                transition: 'all 150ms',
+                display: 'flex', alignItems: 'center', gap: '6px',
+                padding: '8px 12px', borderRadius: '6px',
+                border: '1px dashed var(--border)', background: 'transparent',
+                color: 'var(--text-muted)', cursor: 'pointer', fontSize: '12px',
+                fontFamily: 'Inter, system-ui, sans-serif', transition: 'all 150ms',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--green)';
@@ -225,37 +225,57 @@ export function ServiceSection({
       )}
 
       {/* Add account modal */}
-      <Modal isOpen={showAddAccount} onClose={() => setShowAddAccount(false)} title={`Add Account — ${service.name}`} width={420}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <Input
-            id="acc-label"
-            label="Account Label *"
-            placeholder="e.g. user@gmail.com"
-            value={newLabel}
-            onChange={(e) => { setNewLabel(e.target.value); setNewLabelError(''); }}
-            error={newLabelError}
-            autoFocus
-          />
-          <Select
-            id="acc-status"
-            label="Initial Status"
-            value={newStatus}
-            onChange={(e) => setNewStatus(e.target.value as Account['status'])}
-          >
-            <option value="available">Available</option>
-            <option value="cooldown">On Cooldown</option>
-            <option value="unknown">Unknown</option>
-          </Select>
-          <Input
-            id="acc-notes"
-            label="Notes (optional)"
-            placeholder="Short note about this account"
-            value={newNotes}
-            onChange={(e) => setNewNotes(e.target.value)}
-          />
+      <Modal isOpen={showAddAccount} onClose={() => { setShowAddAccount(false); setSelectedCA(null); setAddError(''); }} title={`Add Account — ${service.name}`} width={440}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minHeight: '280px' }}>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+              Select Account *
+            </label>
+            <CentralAccountDropdown
+              centralAccounts={centralAccounts}
+              excludeIds={linkedCAIds}
+              onSelect={(ca) => { setSelectedCA(ca); setAddError(''); }}
+              onGoToAccountsTab={() => { setShowAddAccount(false); onGoToAccountsTab(); }}
+            />
+            {addError && (
+              <p style={{ fontSize: '11px', color: 'var(--red)', marginTop: '6px' }}>{addError}</p>
+            )}
+          </div>
+
+          {selectedCA && (
+            <>
+              <Select
+                id="acc-status"
+                label="Initial Status"
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value as Account['status'])}
+              >
+                <option value="available">Available</option>
+                <option value="unknown">Unknown</option>
+              </Select>
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>
+                  Notes for this service (optional)
+                </label>
+                <textarea
+                  value={newNotes}
+                  onChange={(e) => setNewNotes(e.target.value)}
+                  placeholder="Notes about this account in this service..."
+                  rows={2}
+                  style={{
+                    width: '100%', background: 'var(--bg-tertiary)', border: '1px solid var(--border)',
+                    borderRadius: '6px', color: 'var(--text-primary)', fontSize: '13px',
+                    padding: '7px 10px', resize: 'vertical', outline: 'none',
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                  }}
+                />
+              </div>
+            </>
+          )}
+
           <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
-            <Button variant="secondary" onClick={() => setShowAddAccount(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleAddAccount}>Add Account</Button>
+            <Button variant="secondary" onClick={() => { setShowAddAccount(false); setSelectedCA(null); setAddError(''); }}>Cancel</Button>
+            <Button variant="primary" onClick={handleAddAccount} disabled={!selectedCA}>Add Account</Button>
           </div>
         </div>
       </Modal>

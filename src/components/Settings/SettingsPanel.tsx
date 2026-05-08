@@ -42,7 +42,7 @@ export function SettingsPanel({
       } else {
         // Merge: concatenate arrays by id
         const merged: Partial<AppStore> = {};
-        const arrKeys: (keyof AppStore)[] = ['services', 'accounts', 'vaultServices', 'vaultAccounts'];
+        const arrKeys: (keyof AppStore)[] = ['centralAccounts', 'services', 'accounts', 'vaultServices', 'vaultAccounts'];
         for (const key of arrKeys) {
           const existing = (store[key] as any[]) ?? [];
           const incoming = (parsed[key] as any[]) ?? [];
@@ -63,8 +63,8 @@ export function SettingsPanel({
 
   const confirmReset = async () => {
     await onPersist({
-      services: [], accounts: [], vaultServices: [], vaultAccounts: [],
-      quotaFilter: 'all', quotaSort: 'name',
+      centralAccounts: [], services: [], accounts: [], vaultServices: [], vaultAccounts: [],
+      quotaFilter: 'all', quotaSort: 'name', accordionState: { tracker: {}, vault: {} },
     });
     addToast('All data has been reset', 'warning');
   };

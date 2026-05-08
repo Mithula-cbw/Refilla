@@ -14,7 +14,13 @@ export function Titlebar({ theme, onToggleTheme, onOpenSettings, activeTab }: Ti
   const handleMaximize = () => window.electronAPI.maximize();
   const handleClose = () => window.electronAPI.close();
 
-  const tabLabel = activeTab === 'quota' ? 'Quota Tracker' : 'AI Vault';
+  const tabLabels: Record<TabId, string> = {
+    quota: 'Quota Tracker',
+    vault: 'AI Vault',
+    accounts: 'Accounts',
+  };
+  const tabLabel = tabLabels[activeTab] ?? '';
+
 
   return (
     <div

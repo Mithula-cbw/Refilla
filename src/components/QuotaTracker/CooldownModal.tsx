@@ -17,6 +17,7 @@ interface CooldownModalProps {
   onClose: () => void;
   onSave: (cooldownUntil: string, notes: string) => void;
   account: Account;
+  accountLabel: string;
   service: Service;
 }
 
@@ -32,7 +33,7 @@ const PRESETS = [
   { label: '30d', hours: 720 },
 ] as const;
 
-export function CooldownModal({ isOpen, onClose, onSave, account, service }: CooldownModalProps) {
+export function CooldownModal({ isOpen, onClose, onSave, account, accountLabel, service }: CooldownModalProps) {
   // If the account is already cooling, edit from the existing deadline;
   // otherwise fall back to the service's default interval.
   const existingIso = account.cooldownUntil ?? null;
@@ -44,11 +45,8 @@ export function CooldownModal({ isOpen, onClose, onSave, account, service }: Coo
   const [error, setError] = useState('');
 
   // Determine if the initial value matches one of our presets.
-  // We match by comparing the preset-computed time to the initial ISO (within ±1 min).
   const detectActivePreset = (): number | null => {
-    // If the service interval is one of our preset hours, start with that selected.
     const matchedPreset = PRESETS.find((p) => p.hours === service.resetIntervalHours);
-    // Only auto-select if we're NOT editing an existing custom deadline.
     if (!existingIso && matchedPreset) return matchedPreset.hours;
     return null;
   };
@@ -67,7 +65,7 @@ export function CooldownModal({ isOpen, onClose, onSave, account, service }: Coo
 
   const handleDateChange = (val: string) => {
     setResetAt(val);
-    setActivePresetHours(null); // custom time — deselect preset
+    setActivePresetHours(null);
     setError('');
   };
 
@@ -80,7 +78,6 @@ export function CooldownModal({ isOpen, onClose, onSave, account, service }: Coo
     onClose();
   };
 
-  // Human-readable preview of the selected reset time
   const previewLabel = (() => {
     if (!resetAt) return null;
     try {
@@ -96,7 +93,7 @@ export function CooldownModal({ isOpen, onClose, onSave, account, service }: Coo
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Set Cooldown — ${account.label}`}
+      title={`Set Cooldown — ${accountLabel}`}
       width={440}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
