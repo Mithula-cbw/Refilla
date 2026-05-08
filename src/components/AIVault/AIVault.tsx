@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { VaultService, VaultAccount, CentralAccount, AccordionState } from '@/types';
 import { VaultServiceSection } from './VaultServiceSection';
 import { MasterSearch } from './MasterSearch';
@@ -16,6 +16,7 @@ interface AIVaultProps {
   vaultAccounts: VaultAccount[];
   centralAccounts: CentralAccount[];
   accordionState: AccordionState;
+  vaultServiceOrder: string[];
   onAddVaultService: (vs: VaultService) => void;
   onUpdateVaultService: (vs: VaultService) => void;
   onDeleteVaultService: (id: string) => void;
@@ -23,18 +24,66 @@ interface AIVaultProps {
   onUpdateVaultAccount: (va: VaultAccount) => void;
   onDeleteVaultAccount: (id: string) => void;
   onAccordionToggle: (serviceId: string, open: boolean) => void;
+  onReorderVaultServices: (orderedIds: string[]) => void;
   onGoToAccountsTab: () => void;
 }
 
 export function AIVault({
-  vaultServices, vaultAccounts, centralAccounts, accordionState,
+  vaultServices, vaultAccounts, centralAccounts, accordionState, vaultServiceOrder,
   onAddVaultService, onUpdateVaultService, onDeleteVaultService,
   onAddVaultAccount, onUpdateVaultAccount, onDeleteVaultAccount,
-  onAccordionToggle, onGoToAccountsTab,
+  onAccordionToggle, onReorderVaultServices, onGoToAccountsTab,
 }: AIVaultProps) {
   const [showAddService, setShowAddService] = useState(false);
   const [editingService, setEditingService] = useState<VaultService | null>(null);
   const [flashInfo, setFlashInfo] = useState<{ serviceId: string; accountId: string; entryId: string } | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const dragSourceRef = useRef<string | null>(null);
+
+  // Apply persisted order, appending any new services at the end
+  const orderedVaultServices = (): VaultService[] => {
+    if (vaultServiceOrder.length === 0) return vaultServices;
+    const known = new Map(vaultServices.map((s) => [s.id, s]));
+    const sorted: VaultService[] = [];
+    for (const id of vaultServiceOrder) {
+      if (known.has(id)) { sorted.push(known.get(id)!); known.delete(id); }
+    }
+    for (const s of known.values()) sorted.push(s);
+    return sorted;
+  };
+
+  const sortedVaultServices = orderedVaultServices();
+
+  // ─── Drag handlers ───────────────────────────────────────────────────────────
+  const handleDragStart = (id: string) => {
+    dragSourceRef.current = id;
+    setDraggingId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (dragSourceRef.current !== id) setDragOverId(id);
+  };
+
+  const handleDrop = (targetId: string) => {
+    const srcId = dragSourceRef.current;
+    if (!srcId || srcId === targetId) { cleanup(); return; }
+    const ids = sortedVaultServices.map((s) => s.id);
+    const from = ids.indexOf(srcId);
+    const to = ids.indexOf(targetId);
+    if (from === -1 || to === -1) { cleanup(); return; }
+    ids.splice(from, 1);
+    ids.splice(to, 0, srcId);
+    onReorderVaultServices(ids);
+    cleanup();
+  };
+
+  const cleanup = () => {
+    dragSourceRef.current = null;
+    setDraggingId(null);
+    setDragOverId(null);
+  };
 
   // New service form state
   const [newName, setNewName] = useState('');
@@ -115,25 +164,42 @@ export function AIVault({
             </div>
           </div>
         ) : (
-          vaultServices.map((vs) => {
+          sortedVaultServices.map((vs) => {
             const isOpen = accordionState.vault[vs.id] ?? false;
+            const isDragging = draggingId === vs.id;
+            const isDragOver = dragOverId === vs.id;
             return (
-              <VaultServiceSection
+              <div
                 key={vs.id}
-                service={vs}
-                accounts={vaultAccounts.filter((a) => a.vaultServiceId === vs.id)}
-                centralAccounts={centralAccounts}
-                flashInfo={flashInfo?.serviceId === vs.id ? flashInfo : undefined}
-                allServices={vaultServices}
-                accordionOpen={isOpen}
-                onAccordionToggle={(open) => onAccordionToggle(vs.id, open)}
-                onUpdateAccount={onUpdateVaultAccount}
-                onDeleteAccount={onDeleteVaultAccount}
-                onAddAccount={onAddVaultAccount}
-                onEditService={(s) => setEditingService(s)}
-                onDeleteService={onDeleteVaultService}
-                onGoToAccountsTab={onGoToAccountsTab}
-              />
+                draggable
+                onDragStart={() => handleDragStart(vs.id)}
+                onDragOver={(e) => handleDragOver(e, vs.id)}
+                onDrop={() => handleDrop(vs.id)}
+                onDragEnd={cleanup}
+                style={{
+                  opacity: isDragging ? 0.45 : 1,
+                  transition: 'opacity 150ms, transform 150ms',
+                  outline: isDragOver ? '2px solid var(--green)' : '2px solid transparent',
+                  borderRadius: '10px',
+                  transform: isDragOver ? 'scale(1.01)' : 'scale(1)',
+                }}
+              >
+                <VaultServiceSection
+                  service={vs}
+                  accounts={vaultAccounts.filter((a) => a.vaultServiceId === vs.id)}
+                  centralAccounts={centralAccounts}
+                  flashInfo={flashInfo?.serviceId === vs.id ? flashInfo : undefined}
+                  allServices={vaultServices}
+                  accordionOpen={isOpen}
+                  onAccordionToggle={(open) => onAccordionToggle(vs.id, open)}
+                  onUpdateAccount={onUpdateVaultAccount}
+                  onDeleteAccount={onDeleteVaultAccount}
+                  onAddAccount={onAddVaultAccount}
+                  onEditService={(s) => setEditingService(s)}
+                  onDeleteService={onDeleteVaultService}
+                  onGoToAccountsTab={onGoToAccountsTab}
+                />
+              </div>
             );
           })
         )}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Service, Account, FilterType, SortType, CentralAccount, AccordionState } from '@/types';
 import { ServiceSection } from './ServiceSection';
 import { ServiceModal } from './AddServiceModal';
@@ -12,6 +12,7 @@ interface QuotaTrackerProps {
   accordionState: AccordionState;
   filter: FilterType;
   sort: SortType;
+  serviceOrder: string[];
   onFilterChange: (f: FilterType) => void;
   onSortChange: (s: SortType) => void;
   onAddService: (s: Service) => void;
@@ -22,6 +23,7 @@ interface QuotaTrackerProps {
   onDeleteAccount: (id: string) => void;
   onNotify: (title: string, body: string) => void;
   onAccordionToggle: (serviceId: string, open: boolean) => void;
+  onReorderServices: (orderedIds: string[]) => void;
   onGoToAccountsTab: () => void;
 }
 
@@ -40,16 +42,62 @@ const SORT_OPTIONS: { value: SortType; label: string }[] = [
 
 export function QuotaTracker({
   services, accounts, centralAccounts, accordionState,
-  filter, sort,
+  filter, sort, serviceOrder,
   onFilterChange, onSortChange,
   onAddService, onUpdateService, onDeleteService,
   onAddAccount, onUpdateAccount, onDeleteAccount,
-  onNotify, onAccordionToggle, onGoToAccountsTab,
+  onNotify, onAccordionToggle, onReorderServices, onGoToAccountsTab,
 }: QuotaTrackerProps) {
   const [showAddService, setShowAddService] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const dragSourceRef = useRef<string | null>(null);
 
-  const sortedServices = [...services].sort((a, b) => a.name.localeCompare(b.name));
+  // Apply persisted order, falling back to alphabetical for new services
+  const orderedServices = (): Service[] => {
+    if (serviceOrder.length === 0) return [...services].sort((a, b) => a.name.localeCompare(b.name));
+    const known = new Map(services.map((s) => [s.id, s]));
+    const sorted: Service[] = [];
+    for (const id of serviceOrder) {
+      if (known.has(id)) { sorted.push(known.get(id)!); known.delete(id); }
+    }
+    // Append any services not yet in the order (newly added)
+    for (const s of known.values()) sorted.push(s);
+    return sorted;
+  };
+
+  const sortedServices = orderedServices();
+
+  // ─── Drag handlers ───────────────────────────────────────────────────────────
+  const handleDragStart = (id: string) => {
+    dragSourceRef.current = id;
+    setDraggingId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (dragSourceRef.current !== id) setDragOverId(id);
+  };
+
+  const handleDrop = (targetId: string) => {
+    const srcId = dragSourceRef.current;
+    if (!srcId || srcId === targetId) { cleanup(); return; }
+    const ids = sortedServices.map((s) => s.id);
+    const from = ids.indexOf(srcId);
+    const to = ids.indexOf(targetId);
+    if (from === -1 || to === -1) { cleanup(); return; }
+    ids.splice(from, 1);
+    ids.splice(to, 0, srcId);
+    onReorderServices(ids);
+    cleanup();
+  };
+
+  const cleanup = () => {
+    dragSourceRef.current = null;
+    setDraggingId(null);
+    setDragOverId(null);
+  };
 
   const sortAccounts = (accs: Account[]): Account[] => {
     return [...accs].sort((a, b) => {
@@ -242,24 +290,41 @@ export function QuotaTracker({
               accounts.filter((a) => a.serviceId === service.id)
             );
             const isOpen = accordionState.tracker[service.id] ?? false;
+            const isDragging = draggingId === service.id;
+            const isDragOver = dragOverId === service.id;
             return (
-              <ServiceSection
+              <div
                 key={service.id}
-                service={service}
-                accounts={serviceAccounts}
-                filter={filter}
-                allServices={services}
-                centralAccounts={centralAccounts}
-                accordionOpen={isOpen}
-                onAccordionToggle={(open) => onAccordionToggle(service.id, open)}
-                onUpdateAccount={onUpdateAccount}
-                onDeleteAccount={onDeleteAccount}
-                onAddAccount={onAddAccount}
-                onEditService={(s) => setEditingService(s)}
-                onDeleteService={onDeleteService}
-                onNotify={onNotify}
-                onGoToAccountsTab={onGoToAccountsTab}
-              />
+                draggable
+                onDragStart={() => handleDragStart(service.id)}
+                onDragOver={(e) => handleDragOver(e, service.id)}
+                onDrop={() => handleDrop(service.id)}
+                onDragEnd={cleanup}
+                style={{
+                  opacity: isDragging ? 0.45 : 1,
+                  transition: 'opacity 150ms, transform 150ms',
+                  outline: isDragOver ? '2px solid var(--green)' : '2px solid transparent',
+                  borderRadius: '10px',
+                  transform: isDragOver ? 'scale(1.01)' : 'scale(1)',
+                }}
+              >
+                <ServiceSection
+                  service={service}
+                  accounts={serviceAccounts}
+                  filter={filter}
+                  allServices={services}
+                  centralAccounts={centralAccounts}
+                  accordionOpen={isOpen}
+                  onAccordionToggle={(open) => onAccordionToggle(service.id, open)}
+                  onUpdateAccount={onUpdateAccount}
+                  onDeleteAccount={onDeleteAccount}
+                  onAddAccount={onAddAccount}
+                  onEditService={(s) => setEditingService(s)}
+                  onDeleteService={onDeleteService}
+                  onNotify={onNotify}
+                  onGoToAccountsTab={onGoToAccountsTab}
+                />
+              </div>
             );
           })
         )}
