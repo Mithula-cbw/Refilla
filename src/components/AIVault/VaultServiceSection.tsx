@@ -5,7 +5,7 @@ import { Modal, ConfirmDialog } from '@/components/UI/Modal';
 import { Button, IconButton } from '@/components/UI/Button';
 import { CentralAccountDropdown } from '@/components/Accounts/CentralAccountDropdown';
 import { v4 as uuidv4 } from 'uuid';
-import { ChevronDown, ChevronRight, Plus, Search, X, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Search, X, Pencil, Trash2, GripVertical } from 'lucide-react';
 
 interface VaultServiceSectionProps {
   service: VaultService;
@@ -81,6 +81,18 @@ export function VaultServiceSection({
         aria-expanded={expanded}
         aria-label={`${service.name} vault section`}
       >
+        {/* Drag handle */}
+        <div
+          title="Drag to reorder"
+          style={{
+            color: 'var(--text-muted)', flexShrink: 0, opacity: hovering ? 0.7 : 0,
+            transition: 'opacity 150ms', cursor: 'grab', padding: '0 2px',
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <GripVertical size={14} />
+        </div>
+
         <div style={{
           width: '32px', height: '32px', borderRadius: '8px',
           background: `${service.color}22`, border: `1px solid ${service.color}55`,

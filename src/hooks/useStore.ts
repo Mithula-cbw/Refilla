@@ -17,6 +17,8 @@ const DEFAULT_STORE: AppStore = {
   notificationsEnabled: true,
   onboardingDone: false,
   accordionState: { tracker: {}, vault: {} },
+  trackerServiceOrder: [],
+  vaultServiceOrder: [],
 };
 
 export function useStore() {
@@ -60,6 +62,9 @@ export function useStore() {
         if (!data.accordionState) {
           data.accordionState = { tracker: {}, vault: {} };
         }
+        // Ensure service order arrays exist (safety for old data)
+        if (!data.trackerServiceOrder) data.trackerServiceOrder = [];
+        if (!data.vaultServiceOrder) data.vaultServiceOrder = [];
 
         setStoreState(data);
       } finally {
@@ -144,8 +149,9 @@ export function useStore() {
 
   const deleteService = useCallback(async (id: string) => {
     const services = store.services.filter((x) => x.id !== id);
-    await persist({ services });
-  }, [store.services, persist]);
+    const trackerServiceOrder = store.trackerServiceOrder.filter((x) => x !== id);
+    await persist({ services, trackerServiceOrder });
+  }, [store.services, store.trackerServiceOrder, persist]);
 
   // ─── Accounts ───────────────────────────────────────────────────────────────
   const addAccount = useCallback(async (a: Account) => {
@@ -176,8 +182,18 @@ export function useStore() {
 
   const deleteVaultService = useCallback(async (id: string) => {
     const vaultServices = store.vaultServices.filter((x) => x.id !== id);
-    await persist({ vaultServices });
-  }, [store.vaultServices, persist]);
+    const vaultServiceOrder = store.vaultServiceOrder.filter((x) => x !== id);
+    await persist({ vaultServices, vaultServiceOrder });
+  }, [store.vaultServices, store.vaultServiceOrder, persist]);
+
+  // ─── Reorder Services ────────────────────────────────────────────────────────
+  const reorderServices = useCallback(async (orderedIds: string[]) => {
+    await persist({ trackerServiceOrder: orderedIds });
+  }, [persist]);
+
+  const reorderVaultServices = useCallback(async (orderedIds: string[]) => {
+    await persist({ vaultServiceOrder: orderedIds });
+  }, [persist]);
 
   // ─── Vault Accounts ─────────────────────────────────────────────────────────
   const addVaultAccount = useCallback(async (va: VaultAccount) => {
@@ -221,5 +237,7 @@ export function useStore() {
     addVaultService, updateVaultService, deleteVaultService,
     // Vault Accounts
     addVaultAccount, updateVaultAccount, deleteVaultAccount,
+    // Reorder
+    reorderServices, reorderVaultServices,
   };
 }

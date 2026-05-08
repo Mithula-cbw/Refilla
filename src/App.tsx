@@ -24,6 +24,7 @@ export default function App() {
     addAccount, updateAccount, deleteAccount,
     addVaultService, updateVaultService, deleteVaultService,
     addVaultAccount, updateVaultAccount, deleteVaultAccount,
+    reorderServices, reorderVaultServices,
   } = useStore();
 
   const { addToast } = useToast();
@@ -197,6 +198,7 @@ export default function App() {
                 accordionState={store.accordionState}
                 filter={store.quotaFilter}
                 sort={store.quotaSort}
+                serviceOrder={store.trackerServiceOrder}
                 onFilterChange={(f) => persist({ quotaFilter: f })}
                 onSortChange={(s) => persist({ quotaSort: s })}
                 onAddService={addService}
@@ -207,6 +209,7 @@ export default function App() {
                 onDeleteAccount={deleteAccount}
                 onNotify={notify}
                 onAccordionToggle={handleTrackerAccordion}
+                onReorderServices={reorderServices}
                 onGoToAccountsTab={() => handleTabChange('accounts')}
               />
             </ErrorBoundary>
@@ -218,6 +221,7 @@ export default function App() {
                 vaultAccounts={store.vaultAccounts}
                 centralAccounts={store.centralAccounts}
                 accordionState={store.accordionState}
+                vaultServiceOrder={store.vaultServiceOrder}
                 onAddVaultService={addVaultService}
                 onUpdateVaultService={updateVaultService}
                 onDeleteVaultService={handleDeleteVaultService}
@@ -225,6 +229,7 @@ export default function App() {
                 onUpdateVaultAccount={updateVaultAccount}
                 onDeleteVaultAccount={deleteVaultAccount}
                 onAccordionToggle={handleVaultAccordion}
+                onReorderVaultServices={reorderVaultServices}
                 onGoToAccountsTab={() => handleTabChange('accounts')}
               />
             </ErrorBoundary>

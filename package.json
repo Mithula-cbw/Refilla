@@ -1,6 +1,6 @@
 {
   "name": "refilla",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "AI Account Tracker — local desktop app for managing AI service quotas and conversation context",
   "main": "dist-electron/main.js",
   "scripts": {

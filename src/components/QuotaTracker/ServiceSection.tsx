@@ -6,7 +6,7 @@ import { Button, IconButton } from '@/components/UI/Button';
 import { ConfirmDialog, Modal } from '@/components/UI/Modal';
 import { Select } from '@/components/UI/Input';
 import { CentralAccountDropdown } from '@/components/Accounts/CentralAccountDropdown';
-import { ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { formatResetInterval } from '@/utils/time';
 
@@ -102,6 +102,18 @@ export function ServiceSection({
         aria-expanded={expanded}
         aria-label={`${service.name} section`}
       >
+        {/* Drag handle */}
+        <div
+          title="Drag to reorder"
+          style={{
+            color: 'var(--text-muted)', flexShrink: 0, opacity: hovering ? 0.7 : 0,
+            transition: 'opacity 150ms', cursor: 'grab', padding: '0 2px',
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <GripVertical size={14} />
+        </div>
+
         {/* Service icon */}
         <div style={{
           width: '32px', height: '32px', borderRadius: '8px',

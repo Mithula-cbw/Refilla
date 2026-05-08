@@ -86,6 +86,9 @@ export interface AppStore {
   notificationsEnabled: boolean;
   onboardingDone: boolean;
   accordionState: AccordionState;
+  /** Persisted drag-reorder: ordered list of service IDs for each tab */
+  trackerServiceOrder: string[];
+  vaultServiceOrder: string[];
   migrationErrors?: string[];
 }
 
